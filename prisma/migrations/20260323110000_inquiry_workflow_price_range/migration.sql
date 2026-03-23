@@ -15,7 +15,7 @@ SET "status_new" = CASE "status"
   WHEN 'COMPLETED' THEN 'CONVERTED'
   WHEN 'CLOSED' THEN 'ABANDONED'
   ELSE 'PENDING'
-END;
+END::"InquiryStatus_new";
 ALTER TABLE "inquiries" ALTER COLUMN "status_new" SET NOT NULL;
 ALTER TABLE "inquiries" ALTER COLUMN "status_new" SET DEFAULT 'PENDING';
 ALTER TABLE "inquiries" DROP COLUMN "status";
@@ -31,7 +31,7 @@ SET "tag" = CASE "intentLevel"
   WHEN 'HIGH' THEN 'HIGH'
   WHEN 'MEDIUM' THEN 'MEDIUM'
   ELSE 'LOW'
-END;
+END::"InquiryTag";
 
 ALTER TABLE "inquiries" ADD COLUMN "nextFollowUpAt" TIMESTAMP(3);
 ALTER TABLE "inquiries" ADD COLUMN "followUpLogs" JSONB;
