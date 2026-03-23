@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useArticles, useInquiriesAdmin, useProducts } from "@/lib/api";
@@ -16,7 +16,7 @@ export default function DashboardPage() {
     { label: locale === "zh" ? "询盘数" : "Inquiries", value: inquiries.length },
     {
       label: locale === "zh" ? "高意向询盘" : "High Intent",
-      value: inquiries.filter((item) => item.intentLevel === "HIGH").length,
+      value: inquiries.filter((item) => item.tag === "HIGH").length,
     },
   ];
 

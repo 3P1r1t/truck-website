@@ -1,4 +1,4 @@
-﻿import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
@@ -155,6 +155,7 @@ async function main() {
       shortDescription: "Compact truck for urban logistics.",
       shortDescriptionZh: "城市物流紧凑型卡车。",
       basePrice: 35000,
+      maxPrice: 35000,
       currency: "USD",
       fuelType: "fuel_type_diesel",
       enginePower: 280,
@@ -177,6 +178,7 @@ async function main() {
       shortDescription: "Compact truck for urban logistics.",
       shortDescriptionZh: "城市物流紧凑型卡车。",
       basePrice: 35000,
+      maxPrice: 35000,
       currency: "USD",
       fuelType: "fuel_type_diesel",
       enginePower: 280,
@@ -204,6 +206,7 @@ async function main() {
       shortDescription: "High-power long-haul heavy truck.",
       shortDescriptionZh: "高功率长途运输重卡。",
       basePrice: 95000,
+      maxPrice: 95000,
       currency: "USD",
       fuelType: "fuel_type_diesel",
       enginePower: 520,
@@ -226,6 +229,7 @@ async function main() {
       shortDescription: "High-power long-haul heavy truck.",
       shortDescriptionZh: "高功率长途运输重卡。",
       basePrice: 95000,
+      maxPrice: 95000,
       currency: "USD",
       fuelType: "fuel_type_diesel",
       enginePower: 520,

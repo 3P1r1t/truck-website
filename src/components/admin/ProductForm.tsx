@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import { Brand, Category, FuelTypeOption, Product } from "@/lib/types";
@@ -12,12 +12,12 @@ type ProductPayload = {
   categoryId: string;
   name: string;
   nameZh?: string;
-  slug?: string;
   description?: string;
   descriptionZh?: string;
   shortDescription?: string;
   shortDescriptionZh?: string;
   basePrice: number;
+  maxPrice?: number;
   currency: string;
   fuelType?: string;
   enginePower?: number;
@@ -55,12 +55,12 @@ export function ProductForm({
     categoryId: initial?.category?.id || categories[0]?.id || "",
     name: initial?.nameEn || "",
     nameZh: initial?.nameZh || "",
-    slug: initial?.slug || "",
     description: initial?.descriptionEn || "",
     descriptionZh: initial?.descriptionZh || "",
     shortDescription: initial?.shortDescriptionEn || "",
     shortDescriptionZh: initial?.shortDescriptionZh || "",
     basePrice: initial?.basePrice || 0,
+    maxPrice: initial?.maxPrice || initial?.basePrice || 0,
     currency: initial?.currency || "USD",
     fuelType: initial?.fuelType || "",
     enginePower: initial?.enginePower || undefined,
@@ -142,10 +142,19 @@ export function ProductForm({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
         <div className="space-y-1">
-          <Label>{locale === "zh" ? "价格" : "Base Price"}</Label>
+          <Label>{locale === "zh" ? "最低价" : "Min Price"}</Label>
           <Input type="number" value={form.basePrice} onChange={(e) => update("basePrice", Number(e.target.value))} required />
+        </div>
+        <div className="space-y-1">
+          <Label>{locale === "zh" ? "最高价" : "Max Price"}</Label>
+          <Input
+            type="number"
+            value={form.maxPrice ?? 0}
+            onChange={(e) => update("maxPrice", Number(e.target.value))}
+            required
+          />
         </div>
         <div className="space-y-1">
           <Label>{locale === "zh" ? "货币" : "Currency"}</Label>
@@ -210,11 +219,7 @@ export function ProductForm({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <div className="space-y-1">
-          <Label>Slug</Label>
-          <Input value={form.slug || ""} onChange={(e) => update("slug", e.target.value)} placeholder="auto-from-name" />
-        </div>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="space-y-1">
           <Label>{locale === "zh" ? "排序" : "Sort Order"}</Label>
           <Input type="number" value={form.sortOrder} onChange={(e) => update("sortOrder", Number(e.target.value) || 0)} />

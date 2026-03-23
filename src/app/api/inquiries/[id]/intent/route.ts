@@ -1,10 +1,14 @@
-﻿export const dynamic = "force-dynamic";
+export const dynamic = "force-dynamic";
 
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { inquiryIntentSchema } from "@/lib/validation";
 import { fail, ok } from "@/lib/utils";
 import { requireAdmin } from "@/lib/admin-auth";
+
+function getFollowUpLogs(value: unknown) {
+  return Array.isArray(value) ? [...value] : [];
+}
 
 export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -24,13 +28,35 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       return fail("Inquiry not found", 404);
     }
 
+    const nextFollowUpAt =
+      parsed.data.nextFollowUpAt !== undefined
+        ? parsed.data.nextFollowUpAt
+          ? new Date(parsed.data.nextFollowUpAt)
+          : null
+        : undefined;
+
+    const followUpLogs = getFollowUpLogs(existing.followUpLogs);
+    const followUpNote = parsed.data.followUpNote?.trim() || null;
+    if (followUpNote || parsed.data.nextFollowUpAt !== undefined) {
+      followUpLogs.push({
+        at: new Date().toISOString(),
+        adminId: admin.id,
+        adminUsername: admin.username,
+        fromStatus: existing.status,
+        toStatus: existing.status,
+        note: followUpNote,
+        nextFollowUpAt: nextFollowUpAt ? nextFollowUpAt.toISOString() : null,
+      });
+    }
+
     const updated = await prisma.inquiry.update({
       where: { id: params.id },
       data: {
-        intentLevel: parsed.data.intentLevel,
-        intentNotes: parsed.data.intentNotes || null,
-        intentUpdatedAt: new Date(),
-        status: "COMPLETED",
+        ...(parsed.data.tag !== undefined ? { tag: parsed.data.tag } : {}),
+        ...(parsed.data.intentNotes !== undefined ? { intentNotes: parsed.data.intentNotes || null } : {}),
+        ...(nextFollowUpAt !== undefined ? { nextFollowUpAt } : {}),
+        ...(parsed.data.abandonReason !== undefined ? { abandonReason: parsed.data.abandonReason || null } : {}),
+        ...(followUpNote || parsed.data.nextFollowUpAt !== undefined ? { followUpLogs } : {}),
       },
     });
 
@@ -41,16 +67,19 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
         entity: "Inquiry",
         entityId: params.id,
         details: {
-          intentLevel: parsed.data.intentLevel,
+          tag: parsed.data.tag,
+          hasFollowUpNote: Boolean(followUpNote),
+          nextFollowUpAt: nextFollowUpAt ? nextFollowUpAt.toISOString() : undefined,
         },
       },
     });
 
-    return ok(updated);
+    return ok({
+      ...updated,
+      followUpLogs: getFollowUpLogs(updated.followUpLogs),
+    });
   } catch (error) {
     console.error("PATCH /api/inquiries/[id]/intent failed", error);
-    return fail("Failed to update inquiry intent", 500);
+    return fail("Failed to update inquiry", 500);
   }
 }
-
-

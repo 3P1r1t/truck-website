@@ -1,4 +1,4 @@
-﻿export const dynamic = "force-dynamic";
+export const dynamic = "force-dynamic";
 
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
@@ -7,6 +7,29 @@ import { fail, ok, slugify } from "@/lib/utils";
 import { getLocale } from "@/lib/api-helpers";
 import { mapProduct } from "@/lib/transformers";
 import { requireAdmin } from "@/lib/admin-auth";
+
+async function generateUniqueProductSlug(name: string, excludeId: string) {
+  const base = slugify(name).trim() || "product";
+  let candidate = base;
+  let suffix = 1;
+
+  while (true) {
+    const exists = await prisma.product.findFirst({
+      where: {
+        slug: candidate,
+        id: { not: excludeId },
+      },
+      select: { id: true },
+    });
+
+    if (!exists) {
+      return candidate;
+    }
+
+    suffix += 1;
+    candidate = `${base}-${suffix}`;
+  }
+}
 
 async function findProduct(identifier: string) {
   return prisma.product.findFirst({
@@ -62,6 +85,12 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     }
 
     const payload = parsed.data;
+    const hasPriceUpdate = payload.basePrice !== undefined || payload.maxPrice !== undefined;
+    const nextBasePrice = payload.basePrice !== undefined ? payload.basePrice : Number(existing.basePrice);
+    const nextMaxPriceRaw = payload.maxPrice !== undefined ? payload.maxPrice : Number(existing.maxPrice);
+    const nextMaxPrice = Math.max(nextMaxPriceRaw ?? nextBasePrice, nextBasePrice);
+    const nextSlug =
+      payload.name !== undefined ? await generateUniqueProductSlug(payload.name, existing.id) : undefined;
 
     const updated = await prisma.product.update({
       where: { id: existing.id },
@@ -70,16 +99,14 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
         ...(payload.categoryId !== undefined ? { categoryId: payload.categoryId } : {}),
         ...(payload.name !== undefined ? { name: payload.name } : {}),
         ...(payload.nameZh !== undefined ? { nameZh: payload.nameZh || null } : {}),
-        ...(payload.slug !== undefined || payload.name !== undefined
-          ? { slug: (payload.slug || slugify(payload.name || existing.name)).trim() }
-          : {}),
+        ...(nextSlug !== undefined ? { slug: nextSlug } : {}),
         ...(payload.description !== undefined ? { description: payload.description || null } : {}),
         ...(payload.descriptionZh !== undefined ? { descriptionZh: payload.descriptionZh || null } : {}),
         ...(payload.shortDescription !== undefined ? { shortDescription: payload.shortDescription || null } : {}),
         ...(payload.shortDescriptionZh !== undefined
           ? { shortDescriptionZh: payload.shortDescriptionZh || null }
           : {}),
-        ...(payload.basePrice !== undefined ? { basePrice: payload.basePrice } : {}),
+        ...(hasPriceUpdate ? { basePrice: nextBasePrice, maxPrice: nextMaxPrice } : {}),
         ...(payload.currency !== undefined ? { currency: payload.currency || "USD" } : {}),
         ...(payload.fuelType !== undefined ? { fuelType: payload.fuelType || null } : {}),
         ...(payload.enginePower !== undefined ? { enginePower: payload.enginePower ?? null } : {}),
@@ -120,9 +147,6 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 
     return ok(mapProduct(updated, getLocale(request)));
   } catch (error: any) {
-    if (error?.code === "P2002") {
-      return fail("Product slug already exists", 409);
-    }
     console.error("PUT /api/products/[id] failed", error);
     return fail("Failed to update product", 500);
   }

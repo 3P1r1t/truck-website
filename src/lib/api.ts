@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import useSWR, { mutate } from "swr";
 import type {
@@ -567,12 +567,44 @@ export async function updateInquiryStatus(id: string, status: Inquiry["status"])
   return data;
 }
 
-export async function updateInquiryIntent(id: string, intentLevel: Inquiry["intentLevel"], intentNotes?: string) {
+export async function updateInquiryWorkflow(
+  id: string,
+  payload: {
+    status: Inquiry["status"];
+    tag?: Inquiry["tag"];
+    intentNotes?: string;
+    note?: string;
+    nextFollowUpAt?: string | null;
+    abandonReason?: string;
+  }
+) {
+  const { data } = await request<Inquiry>(
+    `/inquiries/${id}/status`,
+    {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    },
+    true
+  );
+  await mutate((key) => typeof key === "string" && key.startsWith("/inquiries"));
+  return data;
+}
+
+export async function updateInquiryIntent(
+  id: string,
+  payload: {
+    tag?: Inquiry["tag"];
+    intentNotes?: string;
+    nextFollowUpAt?: string | null;
+    abandonReason?: string;
+    followUpNote?: string;
+  }
+) {
   const { data } = await request<Inquiry>(
     `/inquiries/${id}/intent`,
     {
       method: "PATCH",
-      body: JSON.stringify({ intentLevel, intentNotes }),
+      body: JSON.stringify(payload),
     },
     true
   );

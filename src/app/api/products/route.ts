@@ -1,4 +1,4 @@
-﻿export const dynamic = "force-dynamic";
+export const dynamic = "force-dynamic";
 
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
@@ -7,6 +7,26 @@ import { fail, ok, parsePagination, slugify } from "@/lib/utils";
 import { getLocale, boolParam } from "@/lib/api-helpers";
 import { mapProduct } from "@/lib/transformers";
 import { requireAdmin } from "@/lib/admin-auth";
+
+async function generateUniqueProductSlug(name: string) {
+  const base = slugify(name).trim() || "product";
+  let candidate = base;
+  let suffix = 1;
+
+  while (true) {
+    const exists = await prisma.product.findUnique({
+      where: { slug: candidate },
+      select: { id: true },
+    });
+
+    if (!exists) {
+      return candidate;
+    }
+
+    suffix += 1;
+    candidate = `${base}-${suffix}`;
+  }
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -98,7 +118,12 @@ export async function POST(request: NextRequest) {
     }
 
     const payload = parsed.data;
-    const slug = payload.slug?.trim() || slugify(payload.name);
+    const slug = await generateUniqueProductSlug(payload.name);
+    const minPrice = payload.basePrice;
+    const maxPrice =
+      payload.maxPrice !== undefined && payload.maxPrice !== null
+        ? Math.max(payload.maxPrice, minPrice)
+        : minPrice;
 
     const created = await prisma.product.create({
       data: {
@@ -111,7 +136,8 @@ export async function POST(request: NextRequest) {
         descriptionZh: payload.descriptionZh || null,
         shortDescription: payload.shortDescription || null,
         shortDescriptionZh: payload.shortDescriptionZh || null,
-        basePrice: payload.basePrice,
+        basePrice: minPrice,
+        maxPrice,
         currency: payload.currency || "USD",
         fuelType: payload.fuelType || null,
         enginePower: payload.enginePower ?? null,
@@ -145,9 +171,6 @@ export async function POST(request: NextRequest) {
 
     return ok(mapProduct(created, locale), { status: 201 });
   } catch (error: any) {
-    if (error?.code === "P2002") {
-      return fail("Product slug already exists", 409);
-    }
     console.error("POST /api/products failed", error);
     return fail("Failed to create product", 500);
   }

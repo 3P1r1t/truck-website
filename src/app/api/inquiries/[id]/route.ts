@@ -1,4 +1,4 @@
-﻿export const dynamic = "force-dynamic";
+export const dynamic = "force-dynamic";
 
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
@@ -35,6 +35,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 
     return ok({
       ...inquiry,
+      followUpLogs: Array.isArray(inquiry.followUpLogs) ? inquiry.followUpLogs : [],
       product: inquiry.product
         ? {
             id: inquiry.product.id,
@@ -78,5 +79,3 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     return fail("Failed to delete inquiry", 500);
   }
 }
-
-

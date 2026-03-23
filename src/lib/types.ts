@@ -1,4 +1,4 @@
-﻿export type Locale = "en" | "zh";
+export type Locale = "en" | "zh";
 
 export type Brand = {
   id: string;
@@ -57,6 +57,7 @@ export type Product = {
   shortDescriptionEn?: string | null;
   shortDescriptionZh?: string | null;
   basePrice: number;
+  maxPrice: number;
   currency: string;
   fuelType?: string | null;
   enginePower?: number | null;
@@ -79,8 +80,25 @@ export type Product = {
   updatedAt: string;
 };
 
-export type InquiryStatus = "NEW" | "IN_PROGRESS" | "RESPONDED" | "COMPLETED" | "CLOSED";
-export type IntentLevel = "NONE" | "LOW" | "MEDIUM" | "HIGH";
+export type InquiryStatus =
+  | "PENDING"
+  | "FOLLOWING"
+  | "WAITING_REPLY"
+  | "INTERESTED"
+  | "CONVERTED"
+  | "ABANDONED";
+
+export type InquiryTag = "HIGH" | "MEDIUM" | "LOW";
+
+export type InquiryFollowUpLog = {
+  at: string;
+  adminId: string;
+  adminUsername: string;
+  fromStatus?: InquiryStatus;
+  toStatus?: InquiryStatus;
+  note?: string | null;
+  nextFollowUpAt?: string | null;
+};
 
 export type Inquiry = {
   id: string;
@@ -91,12 +109,14 @@ export type Inquiry = {
   country?: string | null;
   message?: string | null;
   status: InquiryStatus;
-  intentLevel: IntentLevel;
+  tag: InquiryTag;
   intentNotes?: string | null;
-  intentUpdatedAt?: string | null;
+  nextFollowUpAt?: string | null;
+  followUpLogs?: InquiryFollowUpLog[] | null;
+  abandonReason?: string | null;
   createdAt: string;
   updatedAt: string;
-  product?: Pick<Product, "id" | "slug" | "name">;
+  product?: Pick<Product, "id" | "slug" | "name"> | null;
 };
 
 export type Article = {

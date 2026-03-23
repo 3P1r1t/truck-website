@@ -1,4 +1,4 @@
-﻿import { type ClassValue, clsx } from "clsx";
+import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { NextResponse } from "next/server";
 
@@ -90,6 +90,25 @@ export function formatPrice(value: number | string, currency = "USD", locale = "
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
   }).format(amount);
+}
+
+export function formatPriceRange(
+  minValue: number | string,
+  maxValue: number | string,
+  currency = "USD",
+  locale = "en-US"
+) {
+  const min = typeof minValue === "string" ? Number(minValue) : minValue;
+  const max = typeof maxValue === "string" ? Number(maxValue) : maxValue;
+  const safeMin = Number.isFinite(min) ? min : 0;
+  const safeMax = Number.isFinite(max) ? max : safeMin;
+  const resolvedMax = safeMax >= safeMin ? safeMax : safeMin;
+  const formatter = new Intl.NumberFormat(locale, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  });
+  const code = (currency || "USD").toUpperCase();
+  return `${formatter.format(safeMin)}${code}-${formatter.format(resolvedMax)}${code}`;
 }
 
 export function toNumber(value: unknown): number {

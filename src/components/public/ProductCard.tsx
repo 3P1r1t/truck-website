@@ -1,8 +1,8 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import Image from "next/image";
 import { Product } from "@/lib/types";
 import { Card, CardContent } from "@/components/ui/card";
-import { formatPrice } from "@/lib/utils";
+import { formatPriceRange } from "@/lib/utils";
 import { Locale } from "@/lib/i18n";
 
 function withLang(path: string, locale: Locale) {
@@ -25,7 +25,9 @@ export function ProductCard({ product, locale }: { product: Product; locale: Loc
         <CardContent className="space-y-2 p-4">
           <h3 className="line-clamp-1 text-lg font-semibold">{product.name}</h3>
           <p className="line-clamp-2 min-h-[2.5rem] text-sm text-muted-foreground">{product.shortDescription || product.description}</p>
-          <div className="text-lg font-bold text-primary">{formatPrice(product.basePrice, product.currency, locale === "zh" ? "zh-CN" : "en-US")}</div>
+          <div className="text-lg font-bold text-primary">
+            {formatPriceRange(product.basePrice, product.maxPrice, product.currency, locale === "zh" ? "zh-CN" : "en-US")}
+          </div>
         </CardContent>
       </Card>
     </Link>

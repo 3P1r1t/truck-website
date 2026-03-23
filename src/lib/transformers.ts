@@ -1,4 +1,4 @@
-﻿import { Locale, pickLocalized } from "@/lib/i18n";
+import { Locale, pickLocalized } from "@/lib/i18n";
 import { toNumber } from "@/lib/utils";
 import type { Product, Brand, Category, ProductImage, Article } from "@prisma/client";
 
@@ -67,6 +67,7 @@ export function mapProduct(product: ProductWithRelations, locale: Locale) {
     shortDescriptionEn: product.shortDescription,
     shortDescriptionZh: product.shortDescriptionZh,
     basePrice: toNumber(product.basePrice),
+    maxPrice: toNumber(product.maxPrice),
     currency: product.currency,
     fuelType: product.fuelType,
     enginePower: product.enginePower,

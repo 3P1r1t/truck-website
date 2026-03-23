@@ -1,9 +1,9 @@
-﻿export const dynamic = "force-dynamic";
+export const dynamic = "force-dynamic";
 
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { articleUpdateSchema } from "@/lib/validation";
-import { fail, ok, slugify } from "@/lib/utils";
+import { fail, ok } from "@/lib/utils";
 import { getLocale } from "@/lib/api-helpers";
 import { mapArticle } from "@/lib/transformers";
 import { requireAdmin } from "@/lib/admin-auth";
@@ -65,9 +65,6 @@ export async function PUT(request: NextRequest, { params }: { params: { slug: st
       data: {
         ...(payload.title !== undefined ? { title: payload.title } : {}),
         ...(payload.titleZh !== undefined ? { titleZh: payload.titleZh || null } : {}),
-        ...(payload.slug !== undefined || payload.title !== undefined
-          ? { slug: (payload.slug || slugify(payload.title || existing.title)).trim() }
-          : {}),
         ...(payload.excerpt !== undefined ? { excerpt: payload.excerpt || null } : {}),
         ...(payload.excerptZh !== undefined ? { excerptZh: payload.excerptZh || null } : {}),
         ...(payload.content !== undefined ? { content: payload.content } : {}),
@@ -91,10 +88,7 @@ export async function PUT(request: NextRequest, { params }: { params: { slug: st
     });
 
     return ok(mapArticle(updated, getLocale(request)));
-  } catch (error: any) {
-    if (error?.code === "P2002") {
-      return fail("Article slug already exists", 409);
-    }
+  } catch (error) {
     console.error("PUT /api/articles/[slug] failed", error);
     return fail("Failed to update article", 500);
   }

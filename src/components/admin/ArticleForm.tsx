@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useRef, useState } from "react";
 import { Locale } from "@/lib/i18n";
@@ -11,7 +11,6 @@ import { Label } from "@/components/ui/label";
 type ArticlePayload = {
   title: string;
   titleZh?: string;
-  slug?: string;
   excerpt?: string;
   excerptZh?: string;
   content: string;
@@ -46,7 +45,6 @@ export function ArticleForm({
   const [form, setForm] = useState<ArticlePayload>({
     title: initial?.titleEn || "",
     titleZh: initial?.titleZh || "",
-    slug: initial?.slug || "",
     excerpt: initial?.excerptEn || "",
     excerptZh: initial?.excerptZh || "",
     content: initial?.contentEn || "",
@@ -227,11 +225,7 @@ export function ArticleForm({
       <section className="space-y-3 rounded border p-4">
         <h3 className="font-semibold">{locale === "zh" ? "发布设置" : "Publishing"}</h3>
 
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-          <div className="space-y-1">
-            <Label>Slug</Label>
-            <Input value={form.slug || ""} onChange={(e) => patch({ slug: e.target.value })} placeholder="auto-from-title" />
-          </div>
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-1">
           <div className="space-y-1">
             <Label>{locale === "zh" ? "封面图 URL" : "Cover Image URL"}</Label>
             <Input value={form.coverImage || ""} onChange={(e) => patch({ coverImage: e.target.value })} placeholder="/uploads/articles/..." />

@@ -1,4 +1,4 @@
-﻿export const dynamic = "force-dynamic";
+export const dynamic = "force-dynamic";
 
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
@@ -7,6 +7,15 @@ import { fail, ok, parsePagination } from "@/lib/utils";
 import { requireAdmin } from "@/lib/admin-auth";
 import { getLocale } from "@/lib/api-helpers";
 import { pickLocalized } from "@/lib/i18n";
+
+const INQUIRY_STATUSES = [
+  "PENDING",
+  "FOLLOWING",
+  "WAITING_REPLY",
+  "INTERESTED",
+  "CONVERTED",
+  "ABANDONED",
+] as const;
 
 export async function POST(request: NextRequest) {
   try {
@@ -35,6 +44,7 @@ export async function POST(request: NextRequest) {
         phone: payload.phone || null,
         country: payload.country || null,
         message: payload.message || null,
+        followUpLogs: [],
       },
     });
 
@@ -60,7 +70,7 @@ export async function GET(request: NextRequest) {
     const productId = searchParams.get("productId");
 
     const where: any = {};
-    if (status) {
+    if (status && INQUIRY_STATUSES.includes(status as (typeof INQUIRY_STATUSES)[number])) {
       where.status = status;
     }
     if (productId) {
@@ -80,7 +90,7 @@ export async function GET(request: NextRequest) {
             },
           },
         },
-        orderBy: { createdAt: "desc" },
+        orderBy: [{ createdAt: "desc" }],
         skip,
         take: pageSize,
       }),
@@ -89,6 +99,7 @@ export async function GET(request: NextRequest) {
 
     const mapped = items.map((item) => ({
       ...item,
+      followUpLogs: Array.isArray(item.followUpLogs) ? item.followUpLogs : [],
       product: item.product
         ? {
             id: item.product.id,
@@ -104,5 +115,3 @@ export async function GET(request: NextRequest) {
     return fail("Failed to fetch inquiries", 500);
   }
 }
-
-

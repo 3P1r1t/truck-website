@@ -1,4 +1,17 @@
-﻿import { z } from "zod";
+import { z } from "zod";
+
+const imageUrlSchema = z.preprocess(
+  (value) => {
+    if (typeof value === "string" && value.trim() === "") {
+      return undefined;
+    }
+    return value;
+  },
+  z
+    .union([z.string().url(), z.string().regex(/^\/[^\s]+$/)])
+    .optional()
+    .nullable()
+);
 
 export const brandCreateSchema = z.object({
   name: z.string().min(1),
@@ -6,7 +19,7 @@ export const brandCreateSchema = z.object({
   slug: z.string().optional(),
   description: z.string().optional().nullable(),
   descriptionZh: z.string().optional().nullable(),
-  logoUrl: z.string().url().optional().nullable().or(z.literal("")),
+  logoUrl: imageUrlSchema,
   isActive: z.boolean().optional(),
   sortOrder: z.number().int().optional(),
 });
@@ -31,12 +44,12 @@ export const productCreateSchema = z.object({
   categoryId: z.string().min(1),
   name: z.string().min(1),
   nameZh: z.string().optional().nullable(),
-  slug: z.string().optional(),
   description: z.string().optional().nullable(),
   descriptionZh: z.string().optional().nullable(),
   shortDescription: z.string().optional().nullable(),
   shortDescriptionZh: z.string().optional().nullable(),
   basePrice: z.number().positive(),
+  maxPrice: z.number().positive().optional().nullable(),
   currency: z.string().optional(),
   fuelType: z.string().optional().nullable(),
   enginePower: z.number().int().optional().nullable(),
@@ -57,12 +70,11 @@ export const productUpdateSchema = productCreateSchema.partial();
 export const articleCreateSchema = z.object({
   title: z.string().min(1),
   titleZh: z.string().optional().nullable(),
-  slug: z.string().optional(),
   excerpt: z.string().optional().nullable(),
   excerptZh: z.string().optional().nullable(),
   content: z.string().min(1),
   contentZh: z.string().optional().nullable(),
-  coverImage: z.string().url().optional().nullable().or(z.literal("")),
+  coverImage: imageUrlSchema,
   categoryId: z.string().optional().nullable(),
   isActive: z.boolean().optional(),
   publishedAt: z.string().datetime().optional().nullable(),
@@ -80,12 +92,20 @@ export const inquiryCreateSchema = z.object({
 });
 
 export const inquiryStatusSchema = z.object({
-  status: z.enum(["NEW", "IN_PROGRESS", "RESPONDED", "COMPLETED", "CLOSED"]),
+  status: z.enum(["PENDING", "FOLLOWING", "WAITING_REPLY", "INTERESTED", "CONVERTED", "ABANDONED"]),
+  tag: z.enum(["HIGH", "MEDIUM", "LOW"]).optional(),
+  intentNotes: z.string().optional().nullable(),
+  note: z.string().optional().nullable(),
+  nextFollowUpAt: z.string().datetime().optional().nullable(),
+  abandonReason: z.string().optional().nullable(),
 });
 
 export const inquiryIntentSchema = z.object({
-  intentLevel: z.enum(["NONE", "LOW", "MEDIUM", "HIGH"]),
+  tag: z.enum(["HIGH", "MEDIUM", "LOW"]).optional(),
   intentNotes: z.string().optional().nullable(),
+  nextFollowUpAt: z.string().datetime().optional().nullable(),
+  abandonReason: z.string().optional().nullable(),
+  followUpNote: z.string().optional().nullable(),
 });
 
 export const adminLoginSchema = z.object({

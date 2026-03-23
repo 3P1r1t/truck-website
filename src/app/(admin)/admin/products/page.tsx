@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useMemo, useState } from "react";
 import {
@@ -23,6 +23,7 @@ import {
 } from "@/lib/api";
 import { useLocale } from "@/lib/use-locale";
 import { Product } from "@/lib/types";
+import { formatPriceRange } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ProductForm } from "@/components/admin/ProductForm";
 import { ImageUploader } from "@/components/admin/ImageUploader";
@@ -215,7 +216,12 @@ export default function AdminProductsPage() {
                     <td className="px-3 py-2">{product.category?.name || "-"}</td>
                     <td className="px-3 py-2">{fuelTypeNameMap.get(product.fuelType || "") || product.fuelType || "-"}</td>
                     <td className="px-3 py-2">
-                      {product.currency} {product.basePrice}
+                      {formatPriceRange(
+                        product.basePrice,
+                        product.maxPrice,
+                        product.currency,
+                        locale === "zh" ? "zh-CN" : "en-US"
+                      )}
                     </td>
                     <td className="px-3 py-2">{product.isActive ? (locale === "zh" ? "启用" : "Active") : (locale === "zh" ? "停用" : "Inactive")}</td>
                     <td className="space-x-2 px-3 py-2">

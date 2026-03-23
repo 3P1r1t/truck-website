@@ -1,11 +1,11 @@
-﻿"use client";
+"use client";
 
 import { useMemo } from "react";
 import { useParams } from "next/navigation";
 import { ProductGallery } from "@/components/public/ProductGallery";
 import { InquiryForm } from "@/components/public/InquiryForm";
 import { useFuelTypes, useProduct } from "@/lib/api";
-import { formatPrice } from "@/lib/utils";
+import { formatPriceRange } from "@/lib/utils";
 import { useLocale } from "@/lib/use-locale";
 import { t } from "@/lib/site-dictionary";
 
@@ -45,7 +45,7 @@ export default function ProductDetailPage() {
         <div className="space-y-6">
           <div>
             <p className="text-3xl font-bold text-primary">
-              {formatPrice(product.basePrice, product.currency, locale === "zh" ? "zh-CN" : "en-US")}
+              {formatPriceRange(product.basePrice, product.maxPrice, product.currency, locale === "zh" ? "zh-CN" : "en-US")}
             </p>
           </div>
 

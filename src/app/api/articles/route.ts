@@ -1,12 +1,27 @@
-﻿export const dynamic = "force-dynamic";
+export const dynamic = "force-dynamic";
 
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { articleCreateSchema } from "@/lib/validation";
-import { fail, ok, parsePagination, slugify } from "@/lib/utils";
+import { fail, ok, parsePagination } from "@/lib/utils";
 import { getLocale, boolParam } from "@/lib/api-helpers";
 import { mapArticle } from "@/lib/transformers";
 import { requireAdmin } from "@/lib/admin-auth";
+
+async function generateNextArticleSlug() {
+  let counter = (await prisma.article.count()) + 1;
+  while (true) {
+    const candidate = `article-${counter}`;
+    const exists = await prisma.article.findUnique({
+      where: { slug: candidate },
+      select: { id: true },
+    });
+    if (!exists) {
+      return candidate;
+    }
+    counter += 1;
+  }
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -70,7 +85,7 @@ export async function POST(request: NextRequest) {
     }
 
     const payload = parsed.data;
-    const slug = payload.slug?.trim() || slugify(payload.title);
+    const slug = await generateNextArticleSlug();
 
     const created = await prisma.article.create({
       data: {
