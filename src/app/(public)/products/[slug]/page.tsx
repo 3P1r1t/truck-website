@@ -1,0 +1,77 @@
+﻿"use client";
+
+import { useParams } from "next/navigation";
+import { ProductGallery } from "@/components/public/ProductGallery";
+import { InquiryForm } from "@/components/public/InquiryForm";
+import { useProduct } from "@/lib/api";
+import { formatPrice } from "@/lib/utils";
+import { useLocale } from "@/lib/use-locale";
+import { t } from "@/lib/site-dictionary";
+
+export default function ProductDetailPage() {
+  const locale = useLocale();
+  const params = useParams();
+  const slug = params.slug as string;
+  const { product, isLoading } = useProduct(slug, locale);
+
+  if (isLoading) {
+    return <div className="container mx-auto px-4 py-8">{t(locale, "loading")}</div>;
+  }
+
+  if (!product) {
+    return <div className="container mx-auto px-4 py-8">Not found</div>;
+  }
+
+  return (
+    <div className="container mx-auto space-y-8 px-4 py-8">
+      <div>
+        <h1 className="text-3xl font-bold">{product.name}</h1>
+        <p className="mt-2 text-muted-foreground">{product.shortDescription || product.description}</p>
+      </div>
+
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+        <ProductGallery images={product.images} />
+        <div className="space-y-6">
+          <div>
+            <p className="text-3xl font-bold text-primary">
+              {formatPrice(product.basePrice, product.currency, locale === "zh" ? "zh-CN" : "en-US")}
+            </p>
+          </div>
+
+          <InquiryForm productId={product.id} />
+        </div>
+      </div>
+
+      <section>
+        <h2 className="mb-3 text-2xl font-semibold">{t(locale, "product_specs")}</h2>
+        <div className="overflow-hidden rounded border">
+          {[
+            ["Brand", product.brand?.name || "-"],
+            ["Category", product.category?.name || "-"],
+            ["Fuel Type", product.fuelType || "-"],
+            ["Engine Power", product.enginePower ? `${product.enginePower} hp` : "-"],
+            ["Wheelbase", product.wheelbase ? `${product.wheelbase} mm` : "-"],
+            ["Drive", product.driveType || "-"],
+            ["Cargo Length", product.cargoLengthMm ? `${product.cargoLengthMm} mm` : "-"],
+            ["Cargo Volume", product.cargoVolumeCubicM ? `${product.cargoVolumeCubicM} m³` : "-"],
+            ["Battery", product.batteryCapacityKwh ? `${product.batteryCapacityKwh} kWh` : "-"],
+            ["Emission", product.emissionStandard || "-"],
+            ["Weight", product.weightKg ? `${product.weightKg} kg` : "-"],
+          ].map(([label, value]) => (
+            <div key={label} className="grid grid-cols-2 border-b px-4 py-2 text-sm last:border-b-0">
+              <span className="text-muted-foreground">{label}</span>
+              <span>{value}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {product.description && (
+        <section>
+          <h2 className="mb-3 text-2xl font-semibold">Description</h2>
+          <div className="whitespace-pre-wrap text-sm leading-7 text-muted-foreground">{product.description}</div>
+        </section>
+      )}
+    </div>
+  );
+}
