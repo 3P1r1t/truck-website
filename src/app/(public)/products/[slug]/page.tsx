@@ -1,9 +1,10 @@
 ﻿"use client";
 
+import { useMemo } from "react";
 import { useParams } from "next/navigation";
 import { ProductGallery } from "@/components/public/ProductGallery";
 import { InquiryForm } from "@/components/public/InquiryForm";
-import { useProduct } from "@/lib/api";
+import { useFuelTypes, useProduct } from "@/lib/api";
 import { formatPrice } from "@/lib/utils";
 import { useLocale } from "@/lib/use-locale";
 import { t } from "@/lib/site-dictionary";
@@ -13,13 +14,23 @@ export default function ProductDetailPage() {
   const params = useParams();
   const slug = params.slug as string;
   const { product, isLoading } = useProduct(slug, locale);
+  const { fuelTypes } = useFuelTypes(locale);
+
+  const fuelTypeMap = useMemo(() => {
+    const map = new Map<string, string>();
+    fuelTypes.forEach((item) => {
+      map.set(item.key, item.name);
+      map.set(item.nameEn, item.name);
+    });
+    return map;
+  }, [fuelTypes]);
 
   if (isLoading) {
     return <div className="container mx-auto px-4 py-8">{t(locale, "loading")}</div>;
   }
 
   if (!product) {
-    return <div className="container mx-auto px-4 py-8">Not found</div>;
+    return <div className="container mx-auto px-4 py-8">{t(locale, "not_found")}</div>;
   }
 
   return (
@@ -46,17 +57,17 @@ export default function ProductDetailPage() {
         <h2 className="mb-3 text-2xl font-semibold">{t(locale, "product_specs")}</h2>
         <div className="overflow-hidden rounded border">
           {[
-            ["Brand", product.brand?.name || "-"],
-            ["Category", product.category?.name || "-"],
-            ["Fuel Type", product.fuelType || "-"],
-            ["Engine Power", product.enginePower ? `${product.enginePower} hp` : "-"],
-            ["Wheelbase", product.wheelbase ? `${product.wheelbase} mm` : "-"],
-            ["Drive", product.driveType || "-"],
-            ["Cargo Length", product.cargoLengthMm ? `${product.cargoLengthMm} mm` : "-"],
-            ["Cargo Volume", product.cargoVolumeCubicM ? `${product.cargoVolumeCubicM} m³` : "-"],
-            ["Battery", product.batteryCapacityKwh ? `${product.batteryCapacityKwh} kWh` : "-"],
-            ["Emission", product.emissionStandard || "-"],
-            ["Weight", product.weightKg ? `${product.weightKg} kg` : "-"],
+            [locale === "zh" ? "品牌" : "Brand", product.brand?.name || "-"],
+            [locale === "zh" ? "分类" : "Category", product.category?.name || "-"],
+            [locale === "zh" ? "燃料类型" : "Fuel Type", fuelTypeMap.get(product.fuelType || "") || product.fuelType || "-"],
+            [locale === "zh" ? "发动机功率" : "Engine Power", product.enginePower ? `${product.enginePower} hp` : "-"],
+            [locale === "zh" ? "轴距" : "Wheelbase", product.wheelbase ? `${product.wheelbase} mm` : "-"],
+            [locale === "zh" ? "驱动形式" : "Drive", product.driveType || "-"],
+            [locale === "zh" ? "货箱长度" : "Cargo Length", product.cargoLengthMm ? `${product.cargoLengthMm} mm` : "-"],
+            [locale === "zh" ? "货箱容积" : "Cargo Volume", product.cargoVolumeCubicM ? `${product.cargoVolumeCubicM} m³` : "-"],
+            [locale === "zh" ? "电池容量" : "Battery", product.batteryCapacityKwh ? `${product.batteryCapacityKwh} kWh` : "-"],
+            [locale === "zh" ? "排放标准" : "Emission", product.emissionStandard || "-"],
+            [locale === "zh" ? "整备质量" : "Weight", product.weightKg ? `${product.weightKg} kg` : "-"],
           ].map(([label, value]) => (
             <div key={label} className="grid grid-cols-2 border-b px-4 py-2 text-sm last:border-b-0">
               <span className="text-muted-foreground">{label}</span>
@@ -66,12 +77,12 @@ export default function ProductDetailPage() {
         </div>
       </section>
 
-      {product.description && (
+      {product.description ? (
         <section>
-          <h2 className="mb-3 text-2xl font-semibold">Description</h2>
+          <h2 className="mb-3 text-2xl font-semibold">{locale === "zh" ? "产品描述" : "Description"}</h2>
           <div className="whitespace-pre-wrap text-sm leading-7 text-muted-foreground">{product.description}</div>
         </section>
-      )}
+      ) : null}
     </div>
   );
 }

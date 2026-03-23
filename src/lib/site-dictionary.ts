@@ -19,6 +19,12 @@ const en: Dict = {
   empty_products: "No products found",
   empty_articles: "No articles found",
   loading: "Loading...",
+  not_found: "Not found",
+  common_items: "items",
+  filter_search: "Search",
+  filter_all_brands: "All Brands",
+  filter_all_categories: "All Categories",
+  filter_reset: "Reset",
   inquiry_title: "Submit Inquiry",
   inquiry_name: "Full Name",
   inquiry_email: "Email",
@@ -40,6 +46,8 @@ const en: Dict = {
   admin_inquiries: "Inquiries",
   admin_settings: "Site Settings",
   admin_users: "Admins",
+  admin_panel: "Admin Panel",
+  footer_contact: "Contact",
 };
 
 const zh: Dict = {
@@ -59,6 +67,12 @@ const zh: Dict = {
   empty_products: "暂无产品",
   empty_articles: "暂无文章",
   loading: "加载中...",
+  not_found: "未找到内容",
+  common_items: "条",
+  filter_search: "搜索",
+  filter_all_brands: "全部品牌",
+  filter_all_categories: "全部分类",
+  filter_reset: "重置",
   inquiry_title: "提交询盘",
   inquiry_name: "姓名",
   inquiry_email: "邮箱",
@@ -80,6 +94,8 @@ const zh: Dict = {
   admin_inquiries: "询盘管理",
   admin_settings: "站点配置",
   admin_users: "管理员",
+  admin_panel: "管理后台",
+  footer_contact: "联系我们",
 };
 
 export function t(locale: Locale, key: string) {

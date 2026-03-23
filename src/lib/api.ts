@@ -7,8 +7,8 @@ import type {
   Article,
   Brand,
   Category,
+  FuelTypeOption,
   Inquiry,
-  PaginationMeta,
   Product,
   SettingItem,
 } from "@/lib/types";
@@ -37,7 +37,10 @@ export function clearAdminToken() {
 
 async function request<T>(path: string, options: RequestInit = {}, useAdminAuth = false) {
   const headers = new Headers(options.headers || {});
-  headers.set("Content-Type", headers.get("Content-Type") || "application/json");
+  const isFormData = options.body instanceof FormData;
+  if (!isFormData) {
+    headers.set("Content-Type", headers.get("Content-Type") || "application/json");
+  }
 
   if (useAdminAuth) {
     const token = getAdminToken();
@@ -86,7 +89,9 @@ export function useProducts(params?: {
   search?: string;
   brandId?: string;
   categoryId?: string;
+  fuelType?: string;
   featured?: boolean;
+  includeInactive?: boolean;
 }) {
   const searchParams = new URLSearchParams();
   if (params?.lang) searchParams.set("lang", params.lang);
@@ -95,7 +100,9 @@ export function useProducts(params?: {
   if (params?.search) searchParams.set("search", params.search);
   if (params?.brandId) searchParams.set("brandId", params.brandId);
   if (params?.categoryId) searchParams.set("categoryId", params.categoryId);
+  if (params?.fuelType) searchParams.set("fuelType", params.fuelType);
   if (params?.featured) searchParams.set("featured", "true");
+  if (params?.includeInactive) searchParams.set("includeInactive", "true");
 
   const key = `/products${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;
   const { data, error, isLoading } = useSWR(key, fetcherWithMeta<Product[]>);
@@ -121,8 +128,8 @@ export function useProduct(identifier: string, lang?: string) {
   };
 }
 
-export function useBrands(lang?: string) {
-  const key = withLang("/brands", lang);
+export function useBrands(lang?: string, includeInactive = false) {
+  const key = withLang(`/brands${includeInactive ? "?includeInactive=true" : ""}`, lang);
   const { data, error, isLoading } = useSWR(key, fetcher<Brand[]>);
   return {
     brands: data || [],
@@ -132,8 +139,14 @@ export function useBrands(lang?: string) {
   };
 }
 
-export function useCategories(lang?: string, includeChildren = true) {
-  const key = withLang(`/categories?includeChildren=${includeChildren ? "true" : "false"}`, lang);
+export function useCategories(lang?: string, includeChildren = true, includeInactive = false) {
+  const searchParams = new URLSearchParams();
+  searchParams.set("includeChildren", includeChildren ? "true" : "false");
+  if (includeInactive) {
+    searchParams.set("includeInactive", "true");
+  }
+
+  const key = withLang(`/categories?${searchParams.toString()}`, lang);
   const { data, error, isLoading } = useSWR(key, fetcher<Category[]>);
   return {
     categories: data || [],
@@ -143,12 +156,30 @@ export function useCategories(lang?: string, includeChildren = true) {
   };
 }
 
-export function useArticles(params?: { lang?: string; page?: number; pageSize?: number; search?: string }) {
+export function useFuelTypes(lang?: string) {
+  const key = withLang("/fuel-types", lang);
+  const { data, error, isLoading } = useSWR(key, fetcher<FuelTypeOption[]>);
+  return {
+    fuelTypes: data || [],
+    isLoading,
+    isError: error,
+    mutate: () => mutate(key),
+  };
+}
+
+export function useArticles(params?: {
+  lang?: string;
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  includeInactive?: boolean;
+}) {
   const searchParams = new URLSearchParams();
   if (params?.lang) searchParams.set("lang", params.lang);
   if (params?.page) searchParams.set("page", String(params.page));
   if (params?.pageSize) searchParams.set("pageSize", String(params.pageSize));
   if (params?.search) searchParams.set("search", params.search);
+  if (params?.includeInactive) searchParams.set("includeInactive", "true");
 
   const key = `/articles${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;
   const { data, error, isLoading } = useSWR(key, fetcherWithMeta<Article[]>);
@@ -336,6 +367,32 @@ export async function uploadProductImage(productId: string, file: File, imageTyp
   return payload.data;
 }
 
+export async function uploadAsset(file: File, folder = "general") {
+  const token = getAdminToken();
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("folder", folder);
+
+  const response = await fetch(`${API_BASE}/upload`, {
+    method: "POST",
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    body: formData,
+  });
+
+  const payload = (await response.json().catch(() => null)) as ApiEnvelope<{
+    filename: string;
+    path: string;
+    size: number;
+    mimeType: string;
+  }> | null;
+
+  if (!response.ok || !payload || payload.code !== 0) {
+    throw new Error(payload?.message || "Upload failed");
+  }
+
+  return payload.data;
+}
+
 export async function addProductImageByUrl(productId: string, payload: { imageUrl: string; imageType: "main" | "detail"; altText?: string }) {
   const { data } = await request(
     `/products/${productId}/images/url`,
@@ -414,6 +471,37 @@ export async function updateCategory(id: string, payload: Record<string, unknown
 export async function deleteCategory(id: string) {
   await request(`/categories/${id}`, { method: "DELETE" }, true);
   await mutate((key) => typeof key === "string" && key.startsWith("/categories"));
+}
+
+export async function createFuelType(payload: { name: string; nameZh?: string; slug?: string }) {
+  const { data } = await request<FuelTypeOption>(
+    "/fuel-types",
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+    true
+  );
+  await mutate((key) => typeof key === "string" && key.startsWith("/fuel-types"));
+  return data;
+}
+
+export async function updateFuelType(id: string, payload: { name?: string; nameZh?: string; slug?: string }) {
+  const { data } = await request<FuelTypeOption>(
+    `/fuel-types/${id}`,
+    {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    },
+    true
+  );
+  await mutate((key) => typeof key === "string" && key.startsWith("/fuel-types"));
+  return data;
+}
+
+export async function deleteFuelType(id: string) {
+  await request(`/fuel-types/${id}`, { method: "DELETE" }, true);
+  await mutate((key) => typeof key === "string" && key.startsWith("/fuel-types"));
 }
 
 export async function createArticle(payload: Record<string, unknown>) {
@@ -497,8 +585,9 @@ export async function deleteInquiry(id: string) {
   await mutate((key) => typeof key === "string" && key.startsWith("/inquiries"));
 }
 
-export async function adminGetSettings() {
-  const { data } = await request<SettingItem[]>("/admin/settings", {}, true);
+export async function adminGetSettings(group?: string) {
+  const path = `/admin/settings${group ? `?group=${encodeURIComponent(group)}` : ""}`;
+  const { data } = await request<SettingItem[]>(path, {}, true);
   return data;
 }
 
@@ -512,5 +601,6 @@ export async function adminUpdateSettings(items: SettingItem[]) {
     true
   );
   await mutate((key) => typeof key === "string" && key.startsWith("/settings"));
+  await mutate((key) => typeof key === "string" && key.startsWith("/admin/settings"));
   return data;
 }

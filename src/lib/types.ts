@@ -28,6 +28,14 @@ export type Category = {
   sortOrder: number;
 };
 
+export type FuelTypeOption = {
+  id: string;
+  key: string;
+  name: string;
+  nameEn: string;
+  nameZh?: string | null;
+};
+
 export type ProductImage = {
   id: string;
   url: string;

@@ -12,19 +12,47 @@ import { AdminUser } from "@/lib/types";
 import { useLocale } from "@/lib/use-locale";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
+type CreateForm = {
+  username: string;
+  email: string;
+  password: string;
+  role: "ADMIN" | "SUPER_ADMIN";
+};
 
 export default function AdminUsersPage() {
   const locale = useLocale();
   const [users, setUsers] = useState<AdminUser[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [form, setForm] = useState({ username: "", email: "", password: "", role: "ADMIN" as "ADMIN" | "SUPER_ADMIN" });
+
+  const [createOpen, setCreateOpen] = useState(false);
+  const [createSubmitting, setCreateSubmitting] = useState(false);
+  const [createForm, setCreateForm] = useState<CreateForm>({
+    username: "",
+    email: "",
+    password: "",
+    role: "ADMIN",
+  });
+
+  const [manageTarget, setManageTarget] = useState<AdminUser | null>(null);
+  const [manageSubmitting, setManageSubmitting] = useState(false);
+  const [manageActive, setManageActive] = useState(true);
+  const [managePassword, setManagePassword] = useState("");
+
+  const [deleteTarget, setDeleteTarget] = useState<AdminUser | null>(null);
 
   const load = async () => {
+    setLoading(true);
     try {
       const data = await adminGetUsers();
       setUsers(data);
+      setError("");
     } catch (err: any) {
-      setError(err?.message || "Failed to load users");
+      setError(err?.message || (locale === "zh" ? "加载失败" : "Failed to load users"));
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -34,43 +62,29 @@ export default function AdminUsersPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold">{locale === "zh" ? "管理员管理" : "Admin Users"}</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold">{locale === "zh" ? "管理员管理" : "Admin Users"}</h1>
+        <Button
+          onClick={() => {
+            setCreateForm({ username: "", email: "", password: "", role: "ADMIN" });
+            setCreateOpen(true);
+          }}
+        >
+          {locale === "zh" ? "新增管理员" : "New Admin"}
+        </Button>
+      </div>
 
-      <form
-        className="grid grid-cols-1 gap-3 rounded border p-4 md:grid-cols-5"
-        onSubmit={async (event) => {
-          event.preventDefault();
-          setError("");
-          try {
-            await adminCreateUser(form);
-            setForm({ username: "", email: "", password: "", role: "ADMIN" });
-            await load();
-          } catch (err: any) {
-            setError(err?.message || "Failed to create user");
-          }
-        }}
-      >
-        <Input placeholder="Username" value={form.username} onChange={(e) => setForm((v) => ({ ...v, username: e.target.value }))} required />
-        <Input placeholder="Email" type="email" value={form.email} onChange={(e) => setForm((v) => ({ ...v, email: e.target.value }))} required />
-        <Input placeholder="Password" type="password" value={form.password} onChange={(e) => setForm((v) => ({ ...v, password: e.target.value }))} required />
-        <select className="h-10 rounded border px-3" value={form.role} onChange={(e) => setForm((v) => ({ ...v, role: e.target.value as any }))}>
-          <option value="ADMIN">ADMIN</option>
-          <option value="SUPER_ADMIN">SUPER_ADMIN</option>
-        </select>
-        <Button>Add</Button>
-      </form>
-
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
       <div className="rounded border">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b bg-muted/30 text-left">
-              <th className="px-3 py-2">Username</th>
+              <th className="px-3 py-2">{locale === "zh" ? "用户名" : "Username"}</th>
               <th className="px-3 py-2">Email</th>
-              <th className="px-3 py-2">Role</th>
-              <th className="px-3 py-2">Status</th>
-              <th className="px-3 py-2">Actions</th>
+              <th className="px-3 py-2">{locale === "zh" ? "角色" : "Role"}</th>
+              <th className="px-3 py-2">{locale === "zh" ? "状态" : "Status"}</th>
+              <th className="px-3 py-2">{locale === "zh" ? "操作" : "Actions"}</th>
             </tr>
           </thead>
           <tbody>
@@ -79,53 +93,192 @@ export default function AdminUsersPage() {
                 <td className="px-3 py-2">{user.username}</td>
                 <td className="px-3 py-2">{user.email}</td>
                 <td className="px-3 py-2">{user.role}</td>
-                <td className="px-3 py-2">{user.isActive ? "Active" : "Disabled"}</td>
+                <td className="px-3 py-2">{user.isActive ? (locale === "zh" ? "启用" : "Active") : (locale === "zh" ? "停用" : "Disabled")}</td>
                 <td className="space-x-2 px-3 py-2">
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={async () => {
-                      await adminUpdateUserStatus(user.id, !user.isActive);
-                      await load();
+                    onClick={() => {
+                      setManageTarget(user);
+                      setManageActive(user.isActive);
+                      setManagePassword("");
                     }}
                   >
-                    {user.isActive ? "Disable" : "Enable"}
+                    {locale === "zh" ? "管理" : "Manage"}
                   </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={async () => {
-                      const newPassword = window.prompt("New password", "");
-                      if (!newPassword) return;
-                      await adminResetUserPassword(user.id, newPassword);
-                    }}
-                  >
-                    Reset Password
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    onClick={async () => {
-                      if (!window.confirm("Delete this admin user?")) return;
-                      await adminDeleteUser(user.id);
-                      await load();
-                    }}
-                  >
-                    Delete
+                  <Button size="sm" variant="destructive" onClick={() => setDeleteTarget(user)}>
+                    {locale === "zh" ? "删除" : "Delete"}
                   </Button>
                 </td>
               </tr>
             ))}
-            {users.length === 0 && (
+            {!loading && users.length === 0 && (
               <tr>
                 <td className="px-3 py-4 text-muted-foreground" colSpan={5}>
-                  No admin users
+                  {locale === "zh" ? "暂无管理员" : "No admin users"}
                 </td>
               </tr>
             )}
           </tbody>
         </table>
       </div>
+
+      <Dialog open={createOpen} onOpenChange={(next) => !next && setCreateOpen(false)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{locale === "zh" ? "新增管理员" : "Create Admin"}</DialogTitle>
+          </DialogHeader>
+
+          <form
+            className="space-y-4"
+            onSubmit={async (event) => {
+              event.preventDefault();
+              setCreateSubmitting(true);
+              setError("");
+              try {
+                await adminCreateUser(createForm);
+                setCreateOpen(false);
+                await load();
+              } catch (err: any) {
+                setError(err?.message || (locale === "zh" ? "创建失败" : "Failed to create user"));
+              } finally {
+                setCreateSubmitting(false);
+              }
+            }}
+          >
+            <div className="space-y-1">
+              <label className="text-sm font-medium">{locale === "zh" ? "用户名" : "Username"}</label>
+              <Input
+                required
+                value={createForm.username}
+                onChange={(e) => setCreateForm((old) => ({ ...old, username: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-sm font-medium">Email</label>
+              <Input
+                required
+                type="email"
+                value={createForm.email}
+                onChange={(e) => setCreateForm((old) => ({ ...old, email: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-sm font-medium">{locale === "zh" ? "初始密码" : "Initial Password"}</label>
+              <Input
+                required
+                type="password"
+                value={createForm.password}
+                onChange={(e) => setCreateForm((old) => ({ ...old, password: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-sm font-medium">{locale === "zh" ? "角色" : "Role"}</label>
+              <select
+                className="h-10 w-full rounded border px-3"
+                value={createForm.role}
+                onChange={(e) => setCreateForm((old) => ({ ...old, role: e.target.value as CreateForm["role"] }))}
+              >
+                <option value="ADMIN">ADMIN</option>
+                <option value="SUPER_ADMIN">SUPER_ADMIN</option>
+              </select>
+            </div>
+
+            <div className="flex gap-2">
+              <Button disabled={createSubmitting}>{createSubmitting ? (locale === "zh" ? "创建中..." : "Creating...") : (locale === "zh" ? "确定" : "Create")}</Button>
+              <Button type="button" variant="outline" onClick={() => setCreateOpen(false)}>
+                {locale === "zh" ? "取消" : "Cancel"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={Boolean(manageTarget)} onOpenChange={(next) => !next && setManageTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{locale === "zh" ? "管理员设置" : "Admin Settings"}</DialogTitle>
+          </DialogHeader>
+
+          <form
+            className="space-y-4"
+            onSubmit={async (event) => {
+              event.preventDefault();
+              if (!manageTarget) return;
+              setManageSubmitting(true);
+              setError("");
+              try {
+                await adminUpdateUserStatus(manageTarget.id, manageActive);
+                if (managePassword.trim()) {
+                  await adminResetUserPassword(manageTarget.id, managePassword.trim());
+                }
+                setManageTarget(null);
+                await load();
+              } catch (err: any) {
+                setError(err?.message || (locale === "zh" ? "保存失败" : "Failed to save user"));
+              } finally {
+                setManageSubmitting(false);
+              }
+            }}
+          >
+            <div className="space-y-1">
+              <label className="text-sm font-medium">{locale === "zh" ? "状态" : "Status"}</label>
+              <select
+                className="h-10 w-full rounded border px-3"
+                value={manageActive ? "active" : "disabled"}
+                onChange={(e) => setManageActive(e.target.value === "active")}
+              >
+                <option value="active">{locale === "zh" ? "启用" : "Active"}</option>
+                <option value="disabled">{locale === "zh" ? "停用" : "Disabled"}</option>
+              </select>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-sm font-medium">{locale === "zh" ? "重置密码(可选)" : "Reset Password (Optional)"}</label>
+              <Input
+                type="password"
+                value={managePassword}
+                onChange={(e) => setManagePassword(e.target.value)}
+                placeholder={locale === "zh" ? "留空则不修改" : "Leave blank to keep unchanged"}
+              />
+            </div>
+
+            <div className="flex gap-2">
+              <Button disabled={manageSubmitting}>{manageSubmitting ? (locale === "zh" ? "保存中..." : "Saving...") : (locale === "zh" ? "保存" : "Save")}</Button>
+              <Button type="button" variant="outline" onClick={() => setManageTarget(null)}>
+                {locale === "zh" ? "取消" : "Cancel"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={Boolean(deleteTarget)} onOpenChange={(next) => !next && setDeleteTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{locale === "zh" ? "删除管理员" : "Delete Admin"}</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            {locale === "zh" ? "确认删除该管理员？此操作不可恢复。" : "Are you sure to delete this admin user? This action cannot be undone."}
+          </p>
+          <div className="flex gap-2">
+            <Button
+              variant="destructive"
+              onClick={async () => {
+                if (!deleteTarget) return;
+                await adminDeleteUser(deleteTarget.id);
+                setDeleteTarget(null);
+                await load();
+              }}
+            >
+              {locale === "zh" ? "确认删除" : "Delete"}
+            </Button>
+            <Button variant="outline" onClick={() => setDeleteTarget(null)}>
+              {locale === "zh" ? "取消" : "Cancel"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

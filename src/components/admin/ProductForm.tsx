@@ -1,7 +1,8 @@
 ﻿"use client";
 
 import { useState } from "react";
-import { Brand, Category, Product } from "@/lib/types";
+import { Brand, Category, FuelTypeOption, Product } from "@/lib/types";
+import { Locale } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -33,14 +34,18 @@ type ProductPayload = {
 };
 
 export function ProductForm({
+  locale,
   brands,
   categories,
+  fuelTypes,
   initial,
   onSubmit,
   onCancel,
 }: {
+  locale: Locale;
   brands: Brand[];
   categories: Category[];
+  fuelTypes: FuelTypeOption[];
   initial?: Product;
   onSubmit: (payload: ProductPayload) => Promise<void>;
   onCancel?: () => void;
@@ -87,7 +92,7 @@ export function ProductForm({
         try {
           await onSubmit(form);
         } catch (err: any) {
-          setError(err?.message || "Submit failed");
+          setError(err?.message || (locale === "zh" ? "提交失败" : "Submit failed"));
         } finally {
           setSubmitting(false);
         }
@@ -95,19 +100,24 @@ export function ProductForm({
     >
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="space-y-1">
-          <Label>Name (EN)</Label>
+          <Label>Name(EN)</Label>
           <Input value={form.name} onChange={(e) => update("name", e.target.value)} required />
         </div>
         <div className="space-y-1">
-          <Label>Name (ZH)</Label>
+          <Label>Name(Zh)</Label>
           <Input value={form.nameZh || ""} onChange={(e) => update("nameZh", e.target.value)} />
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="space-y-1">
-          <Label>Brand</Label>
-          <select className="h-10 w-full rounded border px-3" value={form.brandId} onChange={(e) => update("brandId", e.target.value)}>
+          <Label>{locale === "zh" ? "品牌" : "Brand"}</Label>
+          <select
+            className="h-10 w-full rounded border px-3"
+            value={form.brandId}
+            onChange={(e) => update("brandId", e.target.value)}
+            required
+          >
             {brands.map((brand) => (
               <option value={brand.id} key={brand.id}>
                 {brand.name}
@@ -116,8 +126,13 @@ export function ProductForm({
           </select>
         </div>
         <div className="space-y-1">
-          <Label>Category</Label>
-          <select className="h-10 w-full rounded border px-3" value={form.categoryId} onChange={(e) => update("categoryId", e.target.value)}>
+          <Label>{locale === "zh" ? "分类" : "Category"}</Label>
+          <select
+            className="h-10 w-full rounded border px-3"
+            value={form.categoryId}
+            onChange={(e) => update("categoryId", e.target.value)}
+            required
+          >
             {categories.map((category) => (
               <option value={category.id} key={category.id}>
                 {category.name}
@@ -129,59 +144,105 @@ export function ProductForm({
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <div className="space-y-1">
-          <Label>Base Price</Label>
+          <Label>{locale === "zh" ? "价格" : "Base Price"}</Label>
           <Input type="number" value={form.basePrice} onChange={(e) => update("basePrice", Number(e.target.value))} required />
         </div>
         <div className="space-y-1">
-          <Label>Currency</Label>
+          <Label>{locale === "zh" ? "货币" : "Currency"}</Label>
           <Input value={form.currency} onChange={(e) => update("currency", e.target.value)} />
         </div>
         <div className="space-y-1">
-          <Label>Fuel Type</Label>
-          <Input value={form.fuelType || ""} onChange={(e) => update("fuelType", e.target.value)} />
+          <Label>{locale === "zh" ? "燃料类型" : "Fuel Type"}</Label>
+          <select
+            className="h-10 w-full rounded border px-3"
+            value={form.fuelType || ""}
+            onChange={(e) => update("fuelType", e.target.value)}
+          >
+            <option value="">{locale === "zh" ? "请选择" : "Select"}</option>
+            {fuelTypes.map((item) => (
+              <option key={item.id} value={item.key}>
+                {item.name}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="space-y-1">
-          <Label>Short Description (EN)</Label>
-          <textarea className="w-full rounded border px-3 py-2 text-sm" rows={3} value={form.shortDescription || ""} onChange={(e) => update("shortDescription", e.target.value)} />
+          <Label>{locale === "zh" ? "短描述(英文)" : "Short Description (EN)"}</Label>
+          <textarea
+            className="w-full rounded border px-3 py-2 text-sm"
+            rows={3}
+            value={form.shortDescription || ""}
+            onChange={(e) => update("shortDescription", e.target.value)}
+          />
         </div>
         <div className="space-y-1">
-          <Label>Short Description (ZH)</Label>
-          <textarea className="w-full rounded border px-3 py-2 text-sm" rows={3} value={form.shortDescriptionZh || ""} onChange={(e) => update("shortDescriptionZh", e.target.value)} />
+          <Label>{locale === "zh" ? "短描述(中文)" : "Short Description (ZH)"}</Label>
+          <textarea
+            className="w-full rounded border px-3 py-2 text-sm"
+            rows={3}
+            value={form.shortDescriptionZh || ""}
+            onChange={(e) => update("shortDescriptionZh", e.target.value)}
+          />
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="space-y-1">
-          <Label>Description (EN)</Label>
-          <textarea className="w-full rounded border px-3 py-2 text-sm" rows={5} value={form.description || ""} onChange={(e) => update("description", e.target.value)} />
+          <Label>{locale === "zh" ? "详情描述(英文)" : "Description (EN)"}</Label>
+          <textarea
+            className="w-full rounded border px-3 py-2 text-sm"
+            rows={5}
+            value={form.description || ""}
+            onChange={(e) => update("description", e.target.value)}
+          />
         </div>
         <div className="space-y-1">
-          <Label>Description (ZH)</Label>
-          <textarea className="w-full rounded border px-3 py-2 text-sm" rows={5} value={form.descriptionZh || ""} onChange={(e) => update("descriptionZh", e.target.value)} />
+          <Label>{locale === "zh" ? "详情描述(中文)" : "Description (ZH)"}</Label>
+          <textarea
+            className="w-full rounded border px-3 py-2 text-sm"
+            rows={5}
+            value={form.descriptionZh || ""}
+            onChange={(e) => update("descriptionZh", e.target.value)}
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div className="space-y-1">
+          <Label>Slug</Label>
+          <Input value={form.slug || ""} onChange={(e) => update("slug", e.target.value)} placeholder="auto-from-name" />
+        </div>
+        <div className="space-y-1">
+          <Label>{locale === "zh" ? "排序" : "Sort Order"}</Label>
+          <Input type="number" value={form.sortOrder} onChange={(e) => update("sortOrder", Number(e.target.value) || 0)} />
+        </div>
+        <div className="space-y-1">
+          <Label>{locale === "zh" ? "驱动形式" : "Drive Type"}</Label>
+          <Input value={form.driveType || ""} onChange={(e) => update("driveType", e.target.value)} />
         </div>
       </div>
 
       <div className="flex gap-4">
         <label className="flex items-center gap-2 text-sm">
           <input type="checkbox" checked={form.isFeatured} onChange={(e) => update("isFeatured", e.target.checked)} />
-          Featured
+          {locale === "zh" ? "首页推荐" : "Featured"}
         </label>
         <label className="flex items-center gap-2 text-sm">
           <input type="checkbox" checked={form.isActive} onChange={(e) => update("isActive", e.target.checked)} />
-          Active
+          {locale === "zh" ? "启用" : "Active"}
         </label>
       </div>
 
       {error && <p className="text-sm text-destructive">{error}</p>}
 
       <div className="flex gap-2">
-        <Button disabled={submitting}>{submitting ? "Saving..." : "Save"}</Button>
+        <Button disabled={submitting}>{submitting ? (locale === "zh" ? "保存中..." : "Saving...") : (locale === "zh" ? "确定" : "Save")}</Button>
         {onCancel && (
           <Button type="button" variant="outline" onClick={onCancel}>
-            Cancel
+            {locale === "zh" ? "取消" : "Cancel"}
           </Button>
         )}
       </div>

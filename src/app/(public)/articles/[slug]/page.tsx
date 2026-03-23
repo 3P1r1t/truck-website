@@ -4,6 +4,8 @@ import Image from "next/image";
 import { useParams } from "next/navigation";
 import { useArticle } from "@/lib/api";
 import { useLocale } from "@/lib/use-locale";
+import { t } from "@/lib/site-dictionary";
+import { renderArticleContent } from "@/lib/article-content";
 import { formatDate } from "@/lib/utils";
 
 export default function ArticleDetailPage() {
@@ -13,27 +15,30 @@ export default function ArticleDetailPage() {
   const { article, isLoading } = useArticle(slug, locale);
 
   if (isLoading) {
-    return <div className="container mx-auto px-4 py-8">Loading...</div>;
+    return <div className="container mx-auto px-4 py-8">{t(locale, "loading")}</div>;
   }
 
   if (!article) {
-    return <div className="container mx-auto px-4 py-8">Not found</div>;
+    return <div className="container mx-auto px-4 py-8">{t(locale, "not_found")}</div>;
   }
 
   return (
     <div className="container mx-auto max-w-4xl px-4 py-8">
       <h1 className="text-3xl font-bold">{article.title}</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        {formatDate(article.publishedAt || article.createdAt, locale === "zh" ? "zh-CN" : "en-US")} · {article.viewCount} views
+        {formatDate(article.publishedAt || article.createdAt, locale === "zh" ? "zh-CN" : "en-US")} · {article.viewCount} {t(locale, "article_reads")}
       </p>
 
-      {article.coverImage && (
+      {article.coverImage ? (
         <div className="relative mt-6 aspect-video overflow-hidden rounded border bg-muted">
           <Image src={article.coverImage} alt={article.title} fill className="object-cover" />
         </div>
-      )}
+      ) : null}
 
-      <article className="mt-8 whitespace-pre-wrap leading-7 text-muted-foreground">{article.content}</article>
+      <article
+        className="article-content mt-8 space-y-4 leading-7 text-muted-foreground"
+        dangerouslySetInnerHTML={{ __html: renderArticleContent(article.content) }}
+      />
     </div>
   );
 }

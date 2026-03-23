@@ -33,12 +33,14 @@ export default function ProductsPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="mb-2 text-3xl font-bold">{t(locale, "nav_products")}</h1>
-      <p className="mb-6 text-muted-foreground">{products.length} items</p>
+      <p className="mb-6 text-muted-foreground">
+        {products.length} {t(locale, "common_items")}
+      </p>
 
       <div className="mb-6 grid grid-cols-1 gap-3 rounded border bg-muted/30 p-4 md:grid-cols-4">
-        <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search" />
+        <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t(locale, "filter_search")} />
         <select className="h-10 rounded border px-3" value={brandId} onChange={(e) => setBrandId(e.target.value)}>
-          <option value="">All Brands</option>
+          <option value="">{t(locale, "filter_all_brands")}</option>
           {brands.map((brand) => (
             <option key={brand.id} value={brand.id}>
               {brand.name}
@@ -46,19 +48,22 @@ export default function ProductsPage() {
           ))}
         </select>
         <select className="h-10 rounded border px-3" value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
-          <option value="">All Categories</option>
+          <option value="">{t(locale, "filter_all_categories")}</option>
           {categories.map((category) => (
             <option key={category.id} value={category.id}>
               {category.name}
             </option>
           ))}
         </select>
-        <Button variant="outline" onClick={() => {
-          setSearch("");
-          setBrandId("");
-          setCategoryId("");
-        }}>
-          Reset
+        <Button
+          variant="outline"
+          onClick={() => {
+            setSearch("");
+            setBrandId("");
+            setCategoryId("");
+          }}
+        >
+          {t(locale, "filter_reset")}
         </Button>
       </div>
 

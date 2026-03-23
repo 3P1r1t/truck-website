@@ -29,7 +29,7 @@ export function Sidebar() {
 
   return (
     <aside className="w-64 border-r bg-muted/20">
-      <div className="border-b p-4 text-lg font-semibold">Admin Panel</div>
+      <div className="border-b p-4 text-lg font-semibold">{t(locale, "admin_panel")}</div>
       <nav className="space-y-1 p-3">
         {items.map((item) => {
           const Icon = item.icon;
@@ -64,4 +64,3 @@ export function Sidebar() {
     </aside>
   );
 }
-

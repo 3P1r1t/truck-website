@@ -19,7 +19,9 @@ export default function ArticlesPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="mb-2 text-3xl font-bold">{t(locale, "nav_articles")}</h1>
-      <p className="mb-6 text-muted-foreground">{articles.length} items</p>
+      <p className="mb-6 text-muted-foreground">
+        {articles.length} {t(locale, "common_items")}
+      </p>
 
       {isLoading ? (
         <p className="text-muted-foreground">{t(locale, "loading")}</p>

@@ -76,3 +76,13 @@
     @apply bg-card text-card-foreground rounded-lg border shadow-sm;
   }
 }
+
+@layer components {
+  .article-content p {
+    @apply mb-4;
+  }
+
+  .article-content img {
+    @apply my-4 h-auto w-full rounded border object-contain;
+  }
+}

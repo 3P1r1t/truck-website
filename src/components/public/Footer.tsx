@@ -28,7 +28,7 @@ export function Footer() {
 
   return (
     <footer className="border-t bg-muted/30">
-      <div className="container mx-auto grid grid-cols-1 gap-8 px-4 py-10 md:grid-cols-4">
+      <div className="container mx-auto grid grid-cols-1 gap-8 px-4 py-10 md:grid-cols-3">
         <div className="space-y-2">
           <Link href={withLang("/", locale)} className="flex items-center gap-2 font-semibold">
             <Truck className="h-5 w-5" />
@@ -48,7 +48,7 @@ export function Footer() {
         </div>
 
         <div>
-          <h4 className="mb-2 font-semibold">Contact</h4>
+          <h4 className="mb-2 font-semibold">{t(locale, "footer_contact")}</h4>
           <div className="space-y-2 text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
               <Phone className="h-4 w-4" />
@@ -62,13 +62,6 @@ export function Footer() {
               <MapPin className="mt-0.5 h-4 w-4" />
               <span>{address}</span>
             </div>
-          </div>
-        </div>
-
-        <div>
-          <h4 className="mb-2 font-semibold">Admin</h4>
-          <div className="text-sm text-muted-foreground">
-            <Link href="/login">/login</Link>
           </div>
         </div>
       </div>
