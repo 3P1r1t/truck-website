@@ -1,4 +1,4 @@
-import { type ClassValue, clsx } from "clsx";
+﻿import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { NextResponse } from "next/server";
 
@@ -131,4 +131,19 @@ export function toNumber(value: unknown): number {
     return Number(value);
   }
   return Number(value || 0);
+}
+
+export function buildWhatsAppLink(phone: string, message = "") {
+  const raw = (phone || "").trim();
+  if (!raw) {
+    return "";
+  }
+
+  const normalizedPhone = raw.replace(/[^\d+]/g, "").replace(/(?!^)\+/g, "");
+  if (!normalizedPhone) {
+    return "";
+  }
+
+  const search = message ? `?text=${encodeURIComponent(message)}` : "";
+  return `https://wa.me/${normalizedPhone.replace(/^\+/, "")}${search}`;
 }

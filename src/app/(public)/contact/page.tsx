@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { submitInquiry, useProducts, useSettings } from "@/lib/api";
 import { useLocale } from "@/lib/use-locale";
 import { getSettingValueByLocale } from "@/lib/i18n";
+import { buildWhatsAppLink } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,6 +28,14 @@ export default function ContactPage() {
 
   const supportEmail = settings.support_email || "support@example.com";
   const supportPhone = settings.support_phone || "+1-000-000-0000";
+  const whatsappNumber = settings.whatsapp_number || supportPhone;
+  const whatsappMessage = getSettingValueByLocale(
+    settings,
+    "whatsapp_message",
+    locale,
+    locale === "zh" ? "您好，我想咨询卡车方案。" : "Hello, I would like to discuss truck options."
+  );
+  const whatsappLink = buildWhatsAppLink(whatsappNumber, whatsappMessage);
   const address = getSettingValueByLocale(settings, "contact_address", locale, "");
 
   const selectedProduct = useMemo(() => products.find((item) => item.id === form.productId), [products, form.productId]);
@@ -40,8 +49,13 @@ export default function ContactPage() {
         </p>
         <div className="rounded border p-4 text-sm text-muted-foreground">
           <p>Email: {supportEmail}</p>
-          <p>Phone: {supportPhone}</p>
-          <p>Address: {address}</p>
+          <p>{locale === "zh" ? "电话" : "Phone"}: {supportPhone}</p>
+          {whatsappLink ? (
+            <p>
+              WhatsApp: <a className="text-green-700 hover:underline" href={whatsappLink} target="_blank" rel="noreferrer">{whatsappNumber}</a>
+            </p>
+          ) : null}
+          <p>{locale === "zh" ? "地址" : "Address"}: {address}</p>
         </div>
       </div>
 

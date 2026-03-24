@@ -96,6 +96,14 @@ export function ProductForm({
   const update = <K extends keyof ProductPayload>(key: K, value: ProductPayload[K]) => {
     setForm((old) => ({ ...old, [key]: value }));
   };
+  const toOptionalNumber = (value: string) => {
+    const trimmed = value.trim();
+    if (!trimmed) {
+      return undefined;
+    }
+    const num = Number(trimmed);
+    return Number.isFinite(num) ? num : undefined;
+  };
 
   return (
     <form
@@ -272,6 +280,68 @@ export function ProductForm({
               rows={5}
               value={form.descriptionZh || ""}
               onChange={(e) => update("descriptionZh", e.target.value)}
+            />
+          </div>
+        </div>
+      </section>
+
+      <section className="space-y-4 rounded border p-4">
+        <SectionTitle title={locale === "zh" ? "\u6280\u672F\u53C2\u6570" : "Technical Specifications"} />
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div className="space-y-1">
+            <Label>{locale === "zh" ? "\u53D1\u52A8\u673A\u529F\u7387(HP)" : "Engine Power (HP)"}</Label>
+            <Input
+              type="number"
+              value={form.enginePower ?? ""}
+              onChange={(e) => update("enginePower", toOptionalNumber(e.target.value))}
+            />
+          </div>
+          <div className="space-y-1">
+            <Label>{locale === "zh" ? "\u8F74\u8DDD(mm)" : "Wheelbase (mm)"}</Label>
+            <Input
+              type="number"
+              value={form.wheelbase ?? ""}
+              onChange={(e) => update("wheelbase", toOptionalNumber(e.target.value))}
+            />
+          </div>
+          <div className="space-y-1">
+            <Label>{locale === "zh" ? "\u8D27\u7BB1\u957F\u5EA6(mm)" : "Cargo Length (mm)"}</Label>
+            <Input
+              type="number"
+              value={form.cargoLengthMm ?? ""}
+              onChange={(e) => update("cargoLengthMm", toOptionalNumber(e.target.value))}
+            />
+          </div>
+          <div className="space-y-1">
+            <Label>{locale === "zh" ? "\u8D27\u7BB1\u5BB9\u79EF(m\u00B3)" : "Cargo Volume (m\u00B3)"}</Label>
+            <Input
+              type="number"
+              value={form.cargoVolumeCubicM ?? ""}
+              onChange={(e) => update("cargoVolumeCubicM", toOptionalNumber(e.target.value))}
+            />
+          </div>
+          <div className="space-y-1">
+            <Label>{locale === "zh" ? "\u7535\u6C60\u5BB9\u91CF(kWh)" : "Battery Capacity (kWh)"}</Label>
+            <Input
+              type="number"
+              value={form.batteryCapacityKwh ?? ""}
+              onChange={(e) => update("batteryCapacityKwh", toOptionalNumber(e.target.value))}
+            />
+          </div>
+          <div className="space-y-1">
+            <Label>{locale === "zh" ? "\u6574\u5907\u8D28\u91CF(kg)" : "Weight (kg)"}</Label>
+            <Input
+              type="number"
+              value={form.weightKg ?? ""}
+              onChange={(e) => update("weightKg", toOptionalNumber(e.target.value))}
+            />
+          </div>
+          <div className="space-y-1 md:col-span-2">
+            <Label>{locale === "zh" ? "\u6392\u653E\u6807\u51C6" : "Emission Standard"}</Label>
+            <Input
+              value={form.emissionStandard || ""}
+              onChange={(e) => update("emissionStandard", e.target.value)}
+              placeholder={locale === "zh" ? "\u4F8B\u5982\uff1aEURO-5 / EURO-6" : "e.g. EURO-5 / EURO-6"}
             />
           </div>
         </div>

@@ -19,8 +19,13 @@ export default function HomePage() {
   const { products } = useProducts({ lang: locale, featured: true, pageSize: 4 });
   const { articles } = useArticles({ lang: locale, pageSize: 3 });
 
-  const heroTitle = getSettingValueByLocale(settings, "home_hero_title", locale, "Commercial Vehicle Solutions");
-  const heroSubtitle = getSettingValueByLocale(settings, "home_hero_subtitle", locale, "Find trucks and submit inquiries quickly.");
+  const heroTitle = getSettingValueByLocale(settings, "home_hero_title", locale, "Tengyu International Truck Factory");
+  const heroSubtitle = getSettingValueByLocale(
+    settings,
+    "home_hero_subtitle",
+    locale,
+    "Specialized in remanufacturing commercial vehicles and trailers."
+  );
 
   return (
     <div>

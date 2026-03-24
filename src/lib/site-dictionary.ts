@@ -48,6 +48,8 @@ const en: Dict = {
   admin_users: "Admins",
   admin_panel: "Admin Panel",
   footer_contact: "Contact",
+  contact_whatsapp: "WhatsApp",
+  contact_start_whatsapp: "Start WhatsApp Chat",
 };
 
 const zh: Dict = {
@@ -96,6 +98,8 @@ const zh: Dict = {
   admin_users: "管理员",
   admin_panel: "管理后台",
   footer_contact: "联系我们",
+  contact_whatsapp: "WhatsApp",
+  contact_start_whatsapp: "发起 WhatsApp 会话",
 };
 
 export function t(locale: Locale, key: string) {

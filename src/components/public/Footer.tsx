@@ -1,11 +1,12 @@
 ﻿"use client";
 
 import Link from "next/link";
-import { Mail, MapPin, Phone, Truck } from "lucide-react";
+import { Mail, MapPin, MessageCircle, Phone, Truck } from "lucide-react";
 import { useSettings } from "@/lib/api";
 import { useLocale } from "@/lib/use-locale";
 import { t } from "@/lib/site-dictionary";
 import { getSettingValueByLocale, Locale } from "@/lib/i18n";
+import { buildWhatsAppLink } from "@/lib/utils";
 
 function withLang(path: string, locale: Locale) {
   return `${path}${path.includes("?") ? "&" : "?"}lang=${locale}`;
@@ -24,6 +25,14 @@ export function Footer() {
   );
   const email = settings.support_email || "support@example.com";
   const phone = settings.support_phone || "+1-000-000-0000";
+  const whatsappNumber = settings.whatsapp_number || phone;
+  const whatsappMessage = getSettingValueByLocale(
+    settings,
+    "whatsapp_message",
+    locale,
+    locale === "zh" ? "您好，我想咨询卡车方案。" : "Hello, I would like to discuss truck options."
+  );
+  const whatsappLink = buildWhatsAppLink(whatsappNumber, whatsappMessage);
   const address = getSettingValueByLocale(settings, "contact_address", locale, "");
 
   return (
@@ -54,6 +63,12 @@ export function Footer() {
               <Phone className="h-4 w-4" />
               {phone}
             </div>
+            {whatsappLink ? (
+              <a className="flex items-center gap-2 text-green-700 hover:underline" href={whatsappLink} target="_blank" rel="noreferrer">
+                <MessageCircle className="h-4 w-4" />
+                {t(locale, "contact_whatsapp")}: {whatsappNumber}
+              </a>
+            ) : null}
             <div className="flex items-center gap-2">
               <Mail className="h-4 w-4" />
               {email}

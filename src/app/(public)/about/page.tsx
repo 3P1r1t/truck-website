@@ -13,9 +13,45 @@ export default function AboutPage() {
     settings,
     "about_intro",
     locale,
-    "We provide integrated procurement and support for commercial fleets."
+    "Tengyu International Truck Factory specializes in remanufacturing a wide range of commercial vehicles and trailers, including dump trucks, tractor trucks, and tankers. We provide high-performance and durable customized solutions for construction, transportation, and engineering projects."
   );
   const aboutImage = settings.about_image_url || "";
+
+  const cards = [
+    {
+      title: getSettingValueByLocale(settings, "about_card_1_title", locale, locale === "zh" ? "质量连接你我" : "Quality Connects Us"),
+      body: getSettingValueByLocale(
+        settings,
+        "about_card_1_body",
+        locale,
+        locale === "zh"
+          ? "我们坚持严格质量标准，每台交付车辆都经过完整检测与审核。"
+          : "Every delivered commercial vehicle goes through strict testing and auditing before handover."
+      ),
+    },
+    {
+      title: getSettingValueByLocale(settings, "about_card_2_title", locale, locale === "zh" ? "再制造能力" : "Remanufacturing Capability"),
+      body: getSettingValueByLocale(
+        settings,
+        "about_card_2_body",
+        locale,
+        locale === "zh"
+          ? "覆盖整车清洗、底盘检修、发动机与变速箱再制造、线路检测及易损件更换。"
+          : "Our process includes deep cleaning, chassis repair, engine and transmission remanufacturing, circuit checks, and component replacement."
+      ),
+    },
+    {
+      title: getSettingValueByLocale(settings, "about_card_3_title", locale, locale === "zh" ? "定制化方案" : "Customized Solutions"),
+      body: getSettingValueByLocale(
+        settings,
+        "about_card_3_body",
+        locale,
+        locale === "zh"
+          ? "可按场景定制自卸车、牵引车、搅拌车、罐车及挂车配置，精准匹配业务需求。"
+          : "We tailor dump trucks, tractor heads, mixers, tankers, and trailers to match specific business scenarios."
+      ),
+    },
+  ];
 
   return (
     <div className="container mx-auto max-w-5xl px-4 py-8">
@@ -36,29 +72,10 @@ export default function AboutPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-        {[
-          {
-            titleEn: "Industry Experience",
-            titleZh: "行业经验",
-            bodyEn: "Focused on international truck sourcing and export support.",
-            bodyZh: "专注国际卡车采购与出口支持。",
-          },
-          {
-            titleEn: "Reliable Supply",
-            titleZh: "稳定供应",
-            bodyEn: "Cooperate with trusted manufacturers and partners.",
-            bodyZh: "与可靠制造商和合作伙伴长期协作。",
-          },
-          {
-            titleEn: "Service Response",
-            titleZh: "服务响应",
-            bodyEn: "Fast response from inquiry to technical coordination.",
-            bodyZh: "从询盘到技术沟通提供快速响应。",
-          },
-        ].map((item) => (
-          <div key={item.titleEn} className="rounded border p-5">
-            <h2 className="text-lg font-semibold">{locale === "zh" ? item.titleZh : item.titleEn}</h2>
-            <p className="mt-2 text-sm text-muted-foreground">{locale === "zh" ? item.bodyZh : item.bodyEn}</p>
+        {cards.map((item) => (
+          <div key={item.title} className="rounded border p-5">
+            <h2 className="text-lg font-semibold">{item.title}</h2>
+            <p className="mt-2 text-sm text-muted-foreground">{item.body}</p>
           </div>
         ))}
       </div>
