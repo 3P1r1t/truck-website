@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMemo, useState } from "react";
 import { deleteInquiry, updateInquiryIntent, updateInquiryWorkflow, useInquiriesAdmin } from "@/lib/api";
@@ -9,19 +9,50 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 
 type StatusAction = { status: Inquiry["status"]; zh: string; en: string };
 
+const ZH = {
+  pageTitle: "\u8BE2\u76D8\u7BA1\u7406",
+  product: "\u4EA7\u54C1",
+  customer: "\u5BA2\u6237",
+  status: "\u72B6\u6001",
+  tag: "\u6807\u7B7E",
+  nextFollowUp: "\u4E0B\u6B21\u8DDF\u8FDB",
+  message: "\u7559\u8A00",
+  actions: "\u64CD\u4F5C",
+  noTransitions: "\u65E0\u53EF\u6267\u884C\u6D41\u8F6C",
+  followUpDetail: "\u8DDF\u8FDB\u8BE6\u60C5",
+  delete: "\u5220\u9664",
+  noInquiries: "\u6682\u65E0\u8BE2\u76D8",
+  statusTransition: "\u72B6\u6001\u6D41\u8F6C",
+  intentTag: "\u610F\u5411\u6807\u7B7E",
+  nextFollowUpTime: "\u4E0B\u6B21\u8DDF\u8FDB\u65F6\u95F4",
+  intentNotes: "\u610F\u5411\u5907\u6CE8",
+  followUpNote: "\u8DDF\u8FDB\u8BB0\u5F55",
+  abandonReason: "\u653E\u5F03\u539F\u56E0",
+  abandonReasonHint: "\u4F8B\u5982\uFF1A\u4EF7\u683C\u9AD8 / \u4E0D\u9700\u8981 / \u5DF2\u8D2D\u4E70 / \u9519\u53F7",
+  recentLogs: "\u6700\u8FD1\u8DDF\u8FDB\u8BB0\u5F55",
+  saveFailed: "\u4FDD\u5B58\u5931\u8D25",
+  saving: "\u4FDD\u5B58\u4E2D...",
+  save: "\u786E\u5B9A",
+  cancel: "\u53D6\u6D88",
+  quickTransitions: "\u5FEB\u6377\u6D41\u8F6C",
+  deleteTitle: "\u5220\u9664\u8BE2\u76D8",
+  deleteConfirm: "\u786E\u8BA4\u5220\u9664\u8BE5\u8BE2\u76D8\u8BB0\u5F55\uFF1F\u6B64\u64CD\u4F5C\u4E0D\u53EF\u6062\u590D\u3002",
+  deleteConfirmBtn: "\u786E\u8BA4\u5220\u9664",
+};
+
 const STATUS_LABEL: Record<Inquiry["status"], { zh: string; en: string }> = {
-  PENDING: { zh: "������", en: "Pending" },
-  FOLLOWING: { zh: "������", en: "Following" },
-  WAITING_REPLY: { zh: "���ظ�", en: "Waiting Reply" },
-  INTERESTED: { zh: "������", en: "Interested" },
-  CONVERTED: { zh: "�ѳɽ�", en: "Converted" },
-  ABANDONED: { zh: "�ѷ���", en: "Abandoned" },
+  PENDING: { zh: "\u5F85\u8DDF\u8FDB", en: "Pending" },
+  FOLLOWING: { zh: "\u8DDF\u8FDB\u4E2D", en: "Following" },
+  WAITING_REPLY: { zh: "\u5F85\u56DE\u590D", en: "Waiting Reply" },
+  INTERESTED: { zh: "\u5DF2\u610F\u5411", en: "Interested" },
+  CONVERTED: { zh: "\u5DF2\u6210\u4EA4", en: "Converted" },
+  ABANDONED: { zh: "\u5DF2\u653E\u5F03", en: "Abandoned" },
 };
 
 const TAG_LABEL: Record<Inquiry["tag"], { zh: string; en: string }> = {
-  HIGH: { zh: "������", en: "High" },
-  MEDIUM: { zh: "�е�����", en: "Medium" },
-  LOW: { zh: "������", en: "Low" },
+  HIGH: { zh: "\u9AD8\u610F\u5411", en: "High" },
+  MEDIUM: { zh: "\u4E2D\u7B49\u610F\u5411", en: "Medium" },
+  LOW: { zh: "\u4F4E\u610F\u5411", en: "Low" },
 };
 
 const STATUS_COLOR: Record<Inquiry["status"], string> = {
@@ -40,20 +71,20 @@ const TAG_COLOR: Record<Inquiry["tag"], string> = {
 };
 
 const STATUS_ACTIONS: Record<Inquiry["status"], StatusAction[]> = {
-  PENDING: [{ status: "FOLLOWING", zh: "��ʼ����", en: "Start Follow-up" }],
+  PENDING: [{ status: "FOLLOWING", zh: "\u5F00\u59CB\u8DDF\u8FDB", en: "Start Follow-up" }],
   FOLLOWING: [
-    { status: "WAITING_REPLY", zh: "��Ǵ��ظ�", en: "Mark Waiting" },
-    { status: "INTERESTED", zh: "���������", en: "Mark Interested" },
-    { status: "ABANDONED", zh: "����ѷ���", en: "Mark Abandoned" },
+    { status: "WAITING_REPLY", zh: "\u6807\u8BB0\u5F85\u56DE\u590D", en: "Mark Waiting" },
+    { status: "INTERESTED", zh: "\u6807\u8BB0\u5DF2\u610F\u5411", en: "Mark Interested" },
+    { status: "ABANDONED", zh: "\u6807\u8BB0\u5DF2\u653E\u5F03", en: "Mark Abandoned" },
   ],
   WAITING_REPLY: [
-    { status: "FOLLOWING", zh: "�ٴθ���", en: "Follow-up Again" },
-    { status: "INTERESTED", zh: "���������", en: "Mark Interested" },
-    { status: "ABANDONED", zh: "����ѷ���", en: "Mark Abandoned" },
+    { status: "FOLLOWING", zh: "\u518D\u6B21\u8DDF\u8FDB", en: "Follow-up Again" },
+    { status: "INTERESTED", zh: "\u6807\u8BB0\u5DF2\u610F\u5411", en: "Mark Interested" },
+    { status: "ABANDONED", zh: "\u6807\u8BB0\u5DF2\u653E\u5F03", en: "Mark Abandoned" },
   ],
   INTERESTED: [
-    { status: "CONVERTED", zh: "�ѳɽ�", en: "Mark Converted" },
-    { status: "ABANDONED", zh: "�ѷ���", en: "Mark Abandoned" },
+    { status: "CONVERTED", zh: "\u5DF2\u6210\u4EA4", en: "Mark Converted" },
+    { status: "ABANDONED", zh: "\u5DF2\u653E\u5F03", en: "Mark Abandoned" },
   ],
   CONVERTED: [],
   ABANDONED: [],
@@ -118,19 +149,19 @@ export default function AdminInquiriesPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold">{locale === "zh" ? "ѯ�̹���" : "Inquiry Management"}</h1>
+      <h1 className="text-3xl font-bold">{locale === "zh" ? ZH.pageTitle : "Inquiry Management"}</h1>
 
       <div className="rounded border">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b bg-muted/30 text-left">
-              <th className="px-3 py-2">{locale === "zh" ? "��Ʒ" : "Product"}</th>
-              <th className="px-3 py-2">{locale === "zh" ? "�ͻ�" : "Customer"}</th>
-              <th className="px-3 py-2">{locale === "zh" ? "״̬" : "Status"}</th>
-              <th className="px-3 py-2">{locale === "zh" ? "��ǩ" : "Tag"}</th>
-              <th className="px-3 py-2">{locale === "zh" ? "�´θ���" : "Next Follow-up"}</th>
-              <th className="px-3 py-2">{locale === "zh" ? "����" : "Message"}</th>
-              <th className="px-3 py-2">{locale === "zh" ? "����" : "Actions"}</th>
+              <th className="px-3 py-2">{locale === "zh" ? ZH.product : "Product"}</th>
+              <th className="px-3 py-2">{locale === "zh" ? ZH.customer : "Customer"}</th>
+              <th className="px-3 py-2">{locale === "zh" ? ZH.status : "Status"}</th>
+              <th className="px-3 py-2">{locale === "zh" ? ZH.tag : "Tag"}</th>
+              <th className="px-3 py-2">{locale === "zh" ? ZH.nextFollowUp : "Next Follow-up"}</th>
+              <th className="px-3 py-2">{locale === "zh" ? ZH.message : "Message"}</th>
+              <th className="px-3 py-2">{locale === "zh" ? ZH.actions : "Actions"}</th>
             </tr>
           </thead>
           <tbody>
@@ -152,7 +183,9 @@ export default function AdminInquiriesPage() {
                   </span>
                 </td>
                 <td className="px-3 py-2 text-xs text-muted-foreground">
-                  {inquiry.nextFollowUpAt ? new Date(inquiry.nextFollowUpAt).toLocaleString(locale === "zh" ? "zh-CN" : "en-US") : "-"}
+                  {inquiry.nextFollowUpAt
+                    ? new Date(inquiry.nextFollowUpAt).toLocaleString(locale === "zh" ? "zh-CN" : "en-US")
+                    : "-"}
                 </td>
                 <td className="max-w-[220px] px-3 py-2 text-muted-foreground">{inquiry.message || "-"}</td>
                 <td className="space-y-2 px-3 py-2">
@@ -163,15 +196,17 @@ export default function AdminInquiriesPage() {
                       </Button>
                     ))}
                     {STATUS_ACTIONS[inquiry.status].length === 0 ? (
-                      <span className="text-xs text-muted-foreground">{locale === "zh" ? "�޿�ִ����ת" : "No transitions"}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {locale === "zh" ? ZH.noTransitions : "No transitions"}
+                      </span>
                     ) : null}
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <Button size="sm" onClick={() => openEditor(inquiry)}>
-                      {locale === "zh" ? "��������" : "Follow-up Detail"}
+                      {locale === "zh" ? ZH.followUpDetail : "Follow-up Detail"}
                     </Button>
                     <Button size="sm" variant="destructive" onClick={() => setDeleteTarget(inquiry)}>
-                      {locale === "zh" ? "ɾ��" : "Delete"}
+                      {locale === "zh" ? ZH.delete : "Delete"}
                     </Button>
                   </div>
                 </td>
@@ -180,7 +215,7 @@ export default function AdminInquiriesPage() {
             {inquiries.length === 0 && (
               <tr>
                 <td colSpan={7} className="px-3 py-4 text-muted-foreground">
-                  {locale === "zh" ? "����ѯ��" : "No inquiries"}
+                  {locale === "zh" ? ZH.noInquiries : "No inquiries"}
                 </td>
               </tr>
             )}
@@ -193,9 +228,9 @@ export default function AdminInquiriesPage() {
           <DialogHeader>
             <DialogTitle>
               {targetStatus
-                ? `${locale === "zh" ? "״̬��ת" : "Status Transition"}: ${statusText(editing?.status || "PENDING")} -> ${statusText(targetStatus)}`
+                ? `${locale === "zh" ? ZH.statusTransition : "Status Transition"}: ${statusText(editing?.status || "PENDING")} -> ${statusText(targetStatus)}`
                 : locale === "zh"
-                  ? "��������"
+                  ? ZH.followUpDetail
                   : "Follow-up Detail"}
             </DialogTitle>
           </DialogHeader>
@@ -230,14 +265,14 @@ export default function AdminInquiriesPage() {
                 setEditing(null);
                 setTargetStatus(null);
               } catch (err: any) {
-                setError(err?.message || (locale === "zh" ? "����ʧ��" : "Save failed"));
+                setError(err?.message || (locale === "zh" ? ZH.saveFailed : "Save failed"));
               } finally {
                 setSaving(false);
               }
             }}
           >
             <div className="space-y-1">
-              <label className="text-sm font-medium">{locale === "zh" ? "�����ǩ" : "Intent Tag"}</label>
+              <label className="text-sm font-medium">{locale === "zh" ? ZH.intentTag : "Intent Tag"}</label>
               <select className="h-10 w-full rounded border px-3" value={tag} onChange={(e) => setTag(e.target.value as Inquiry["tag"])}>
                 {(["HIGH", "MEDIUM", "LOW"] as Inquiry["tag"][]).map((item) => (
                   <option key={item} value={item}>
@@ -248,7 +283,7 @@ export default function AdminInquiriesPage() {
             </div>
 
             <div className="space-y-1">
-              <label className="text-sm font-medium">{locale === "zh" ? "�´θ���ʱ��" : "Next Follow-up Time"}</label>
+              <label className="text-sm font-medium">{locale === "zh" ? ZH.nextFollowUpTime : "Next Follow-up Time"}</label>
               <input
                 className="h-10 w-full rounded border px-3"
                 type="datetime-local"
@@ -258,7 +293,7 @@ export default function AdminInquiriesPage() {
             </div>
 
             <div className="space-y-1">
-              <label className="text-sm font-medium">{locale === "zh" ? "����ע" : "Intent Notes"}</label>
+              <label className="text-sm font-medium">{locale === "zh" ? ZH.intentNotes : "Intent Notes"}</label>
               <textarea
                 className="w-full rounded border px-3 py-2 text-sm"
                 rows={3}
@@ -268,7 +303,7 @@ export default function AdminInquiriesPage() {
             </div>
 
             <div className="space-y-1">
-              <label className="text-sm font-medium">{locale === "zh" ? "������¼" : "Follow-up Note"}</label>
+              <label className="text-sm font-medium">{locale === "zh" ? ZH.followUpNote : "Follow-up Note"}</label>
               <textarea
                 className="w-full rounded border px-3 py-2 text-sm"
                 rows={3}
@@ -279,20 +314,20 @@ export default function AdminInquiriesPage() {
 
             {targetStatus === "ABANDONED" || editing?.status === "ABANDONED" ? (
               <div className="space-y-1">
-                <label className="text-sm font-medium">{locale === "zh" ? "����ԭ��" : "Abandon Reason"}</label>
+                <label className="text-sm font-medium">{locale === "zh" ? ZH.abandonReason : "Abandon Reason"}</label>
                 <textarea
                   className="w-full rounded border px-3 py-2 text-sm"
                   rows={2}
                   value={abandonReason}
                   onChange={(e) => setAbandonReason(e.target.value)}
-                  placeholder={locale === "zh" ? "���磺�۸�� / ����Ҫ / ���� / ���" : "e.g. too expensive / no need / bought elsewhere"}
+                  placeholder={locale === "zh" ? ZH.abandonReasonHint : "e.g. too expensive / no need / bought elsewhere"}
                 />
               </div>
             ) : null}
 
             {editing?.followUpLogs && editing.followUpLogs.length > 0 ? (
               <div className="space-y-2 rounded border p-3">
-                <p className="text-sm font-medium">{locale === "zh" ? "���������¼" : "Recent Follow-up Logs"}</p>
+                <p className="text-sm font-medium">{locale === "zh" ? ZH.recentLogs : "Recent Follow-up Logs"}</p>
                 <div className="max-h-40 space-y-2 overflow-y-auto text-xs text-muted-foreground">
                   {editing.followUpLogs
                     .slice()
@@ -308,7 +343,9 @@ export default function AdminInquiriesPage() {
                         <div key={`${at}-${index}`} className="rounded bg-muted/40 px-2 py-1">
                           <div>{at ? new Date(at).toLocaleString(locale === "zh" ? "zh-CN" : "en-US") : "-"}</div>
                           <div>
-                            {fromStatus && toStatus ? `${statusText(fromStatus as Inquiry["status"])} -> ${statusText(toStatus as Inquiry["status"])}` : "-"}
+                            {fromStatus && toStatus
+                              ? `${statusText(fromStatus as Inquiry["status"])} -> ${statusText(toStatus as Inquiry["status"])}`
+                              : "-"}
                           </div>
                           {note ? <div>{note}</div> : null}
                         </div>
@@ -321,7 +358,9 @@ export default function AdminInquiriesPage() {
             {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
             <div className="flex gap-2">
-              <Button disabled={saving}>{saving ? (locale === "zh" ? "������..." : "Saving...") : locale === "zh" ? "ȷ��" : "Save"}</Button>
+              <Button disabled={saving}>
+                {saving ? (locale === "zh" ? ZH.saving : "Saving...") : locale === "zh" ? ZH.save : "Save"}
+              </Button>
               <Button
                 type="button"
                 variant="outline"
@@ -330,14 +369,14 @@ export default function AdminInquiriesPage() {
                   setTargetStatus(null);
                 }}
               >
-                {locale === "zh" ? "ȡ��" : "Cancel"}
+                {locale === "zh" ? ZH.cancel : "Cancel"}
               </Button>
             </div>
           </form>
 
           {editing && currentActions.length > 0 && !targetStatus ? (
             <div className="space-y-2 border-t pt-3">
-              <p className="text-sm font-medium">{locale === "zh" ? "�����ת" : "Quick Transitions"}</p>
+              <p className="text-sm font-medium">{locale === "zh" ? ZH.quickTransitions : "Quick Transitions"}</p>
               <div className="flex flex-wrap gap-2">
                 {currentActions.map((action) => (
                   <Button key={action.status} variant="outline" size="sm" onClick={() => setTargetStatus(action.status)}>
@@ -353,10 +392,10 @@ export default function AdminInquiriesPage() {
       <Dialog open={Boolean(deleteTarget)} onOpenChange={(next) => !next && setDeleteTarget(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{locale === "zh" ? "ɾ��ѯ��" : "Delete Inquiry"}</DialogTitle>
+            <DialogTitle>{locale === "zh" ? ZH.deleteTitle : "Delete Inquiry"}</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            {locale === "zh" ? "ȷ��ɾ����ѯ�̼�¼���˲������ɻָ���" : "Are you sure to delete this inquiry? This action cannot be undone."}
+            {locale === "zh" ? ZH.deleteConfirm : "Are you sure to delete this inquiry? This action cannot be undone."}
           </p>
           <div className="flex gap-2">
             <Button
@@ -368,10 +407,10 @@ export default function AdminInquiriesPage() {
                 setDeleteTarget(null);
               }}
             >
-              {locale === "zh" ? "ȷ��ɾ��" : "Delete"}
+              {locale === "zh" ? ZH.deleteConfirmBtn : "Delete"}
             </Button>
             <Button variant="outline" onClick={() => setDeleteTarget(null)}>
-              {locale === "zh" ? "ȡ��" : "Cancel"}
+              {locale === "zh" ? ZH.cancel : "Cancel"}
             </Button>
           </div>
         </DialogContent>
