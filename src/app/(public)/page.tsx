@@ -27,6 +27,11 @@ function safeColor(input: string | undefined, fallback: string) {
   return fallback;
 }
 
+function isVideoAsset(url: string) {
+  const normalized = url.split("?")[0].split("#")[0].toLowerCase();
+  return /\.(mp4|webm|ogg|mov|m4v|avi)$/.test(normalized);
+}
+
 type SolutionBlock = {
   title: string;
   desc: string;
@@ -91,9 +96,10 @@ export default function HomePage() {
     locale,
     "Tengyu provides remanufactured commercial vehicles and reliable fleet solutions for global transport companies."
   );
-  const heroImage =
-    settings.home_hero_image_url ||
+  const defaultHeroImage =
     "https://images.unsplash.com/photo-1592417817098-8fd3d7dbe115?auto=format&fit=crop&w=1920&q=80";
+  const heroMediaUrl = (settings.home_hero_image_url || "").trim() || "/Home-background.mp4";
+  const heroIsVideo = isVideoAsset(heroMediaUrl);
 
   const capabilityTitle = getSettingValueByLocale(
     settings,
@@ -159,15 +165,30 @@ export default function HomePage() {
 
   return (
     <div>
-      <section
-        className="relative min-h-[82vh] overflow-hidden bg-slate-950 text-white"
-        style={{
-          backgroundImage: `linear-gradient(78deg, rgba(15,23,42,0.9) 0%, rgba(15,23,42,0.36) 60%), url(${heroImage})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
-      >
-        <div className="section-shell flex min-h-[82vh] items-center py-24">
+      <section className="relative min-h-[82vh] overflow-hidden bg-slate-950 text-white">
+        {heroIsVideo ? (
+          <video
+            className="absolute inset-0 h-full w-full object-cover"
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="metadata"
+            poster={defaultHeroImage}
+          >
+            <source src={heroMediaUrl} />
+          </video>
+        ) : (
+          <div
+            className="absolute inset-0 bg-cover bg-center"
+            style={{ backgroundImage: `url(${heroMediaUrl || defaultHeroImage})` }}
+          />
+        )}
+        <div
+          aria-hidden
+          className="absolute inset-0 bg-[linear-gradient(78deg,rgba(15,23,42,0.9)_0%,rgba(15,23,42,0.36)_60%)]"
+        />
+        <div className="section-shell relative z-10 flex min-h-[82vh] items-center py-24">
           <div className="max-w-3xl space-y-7">
             <div className="tire-line" />
             <h1 className="text-5xl font-bold uppercase leading-[1.05] tracking-tight md:text-7xl">

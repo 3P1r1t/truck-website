@@ -20,11 +20,11 @@ const REQUIRED_SETTINGS: SettingItem[] = [
   {
     key: "home_hero_image_url",
     value: "",
-    type: "image",
+    type: "media",
     group: "home",
-    label: "Home Hero Image URL",
-    labelZh: "首页主视觉图片",
-    description: "Hero background image on homepage",
+    label: "Home Hero Media URL",
+    labelZh: "首页主视觉媒体",
+    description: "Hero background image or video on homepage",
   },
   {
     key: "home_hero_title_line1_en",
@@ -554,7 +554,9 @@ export default function AdminSettingsPage() {
                   <div className="space-y-3 p-4">
                     {rows.map((item) => {
                       const index = items.findIndex((entry) => entry.key === item.key);
-                      const isImage = item.type === "image" || item.key.includes("image");
+                      const isHeroMedia = item.key === "home_hero_image_url";
+                      const isMediaUploadField =
+                        item.type === "image" || item.type === "media" || item.key.includes("image") || isHeroMedia;
                       return (
                         <div key={item.key} className="space-y-2 rounded border p-3">
                           <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
@@ -564,7 +566,7 @@ export default function AdminSettingsPage() {
                             </div>
                           </div>
 
-                          {isImage ? (
+                          {isMediaUploadField ? (
                             <div className="space-y-2">
                               <input
                                 className="h-10 w-full rounded border px-3 text-sm"
@@ -575,7 +577,7 @@ export default function AdminSettingsPage() {
                               <div className="flex items-center gap-2">
                                 <input
                                   type="file"
-                                  accept="image/*"
+                                  accept={isHeroMedia ? "image/*,video/*" : "image/*"}
                                   className="hidden"
                                   id={`upload-${item.key}`}
                                   onChange={async (event) => {
@@ -598,7 +600,13 @@ export default function AdminSettingsPage() {
                                 />
                                 <label htmlFor={`upload-${item.key}`}>
                                   <Button type="button" variant="outline" size="sm" asChild>
-                                    <span>{uploadingKey === item.key ? (locale === "zh" ? "上传中..." : "Uploading...") : (locale === "zh" ? "上传图片" : "Upload Image")}</span>
+                                    <span>
+                                      {uploadingKey === item.key
+                                        ? (locale === "zh" ? "上传中..." : "Uploading...")
+                                        : isHeroMedia
+                                          ? (locale === "zh" ? "上传图片/视频" : "Upload Media")
+                                          : (locale === "zh" ? "上传图片" : "Upload Image")}
+                                    </span>
                                   </Button>
                                 </label>
                                 {item.value ? <span className="text-xs text-muted-foreground">{item.value}</span> : null}

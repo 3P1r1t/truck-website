@@ -3,7 +3,7 @@
 import { NextRequest } from "next/server";
 import { fail, ok } from "@/lib/utils";
 import { requireAdmin } from "@/lib/admin-auth";
-import { isAllowedImageType, saveUploadedFile } from "@/lib/upload";
+import { isAllowedMediaType, saveUploadedFile } from "@/lib/upload";
 
 export async function POST(request: NextRequest) {
   try {
@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
       return fail("File is required", 400);
     }
 
-    if (!isAllowedImageType(file.type)) {
+    if (!isAllowedMediaType(file.type)) {
       return fail("Unsupported file type", 400);
     }
 

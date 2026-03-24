@@ -16,6 +16,20 @@ export function isAllowedImageType(mimeType: string) {
   return ["image/jpeg", "image/png", "image/webp", "image/gif"].includes(mimeType);
 }
 
+export function isAllowedMediaType(mimeType: string) {
+  return [
+    "image/jpeg",
+    "image/png",
+    "image/webp",
+    "image/gif",
+    "video/mp4",
+    "video/webm",
+    "video/ogg",
+    "video/quicktime",
+    "video/x-msvideo",
+  ].includes(mimeType);
+}
+
 export async function saveUploadedFile(file: File, subDirectory = "") {
   const uploadDir = process.env.UPLOAD_DIR || DEFAULT_UPLOAD_DIR;
   const relativeDir = subDirectory ? `${uploadDir}/${subDirectory}` : uploadDir;
