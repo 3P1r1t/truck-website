@@ -47,6 +47,8 @@ type ProductSeed = {
   cargoVolumeCubicM?: number;
   emissionStandard?: string;
   weightKg?: number;
+  description?: string;
+  descriptionZh?: string;
   sortOrder: number;
 };
 
@@ -134,10 +136,15 @@ async function upsertCategories(seeds: CategorySeed[]) {
 }
 
 async function upsertProducts(products: ProductSeed[], brandIds: Map<string, string>, categoryIds: Map<string, string>) {
-  const imageSet = [
-    "https://images.pexels.com/photos/93398/pexels-photo-93398.jpeg",
-    "https://images.pexels.com/photos/2199293/pexels-photo-2199293.jpeg",
-  ];
+  const keepSlugs = products.map((item) => item.slug);
+
+  await prisma.product.deleteMany({
+    where: {
+      slug: {
+        notIn: keepSlugs,
+      },
+    },
+  });
 
   for (let index = 0; index < products.length; index += 1) {
     const seed = products[index];
@@ -147,10 +154,8 @@ async function upsertProducts(products: ProductSeed[], brandIds: Map<string, str
       continue;
     }
 
-    const descriptionEn =
-      "Tengyu remanufactured commercial vehicle with strict inspection, durable configuration, and stable delivery capability.";
-    const descriptionZh =
-      "腾宇再制造商用车，经过严格检测，配置耐用，具备稳定交付能力。";
+    const descriptionEn = seed.description || "Catalog model from Tengyu remanufacturing truck factory brochure: " + seed.name + ".";
+    const descriptionZh = seed.descriptionZh || "腾宇再制造卡车图册车型：" + seed.nameZh + "。";
 
     const product = await prisma.product.upsert({
       where: { slug: seed.slug },
@@ -208,26 +213,20 @@ async function upsertProducts(products: ProductSeed[], brandIds: Map<string, str
       select: { id: true, name: true },
     });
 
-    for (let imgIdx = 0; imgIdx < imageSet.length; imgIdx += 1) {
-      const imageUrl = imageSet[imgIdx];
-      const exists = await prisma.productImage.findFirst({
-        where: {
-          productId: product.id,
-          imageUrl,
-        },
-      });
-      if (!exists) {
-        await prisma.productImage.create({
-          data: {
-            productId: product.id,
-            imageUrl,
-            altText: `${product.name} image ${imgIdx + 1}`,
-            isPrimary: imgIdx === 0,
-            sortOrder: imgIdx + 1,
-          },
-        });
-      }
-    }
+    await prisma.productImage.deleteMany({ where: { productId: product.id } });
+
+    const pageNo = String(seed.sortOrder + 4).padStart(2, "0");
+    const imageUrl = "/assets/pdf-extract/images/page-" + pageNo + "-img-1.jpeg";
+
+    await prisma.productImage.create({
+      data: {
+        productId: product.id,
+        imageUrl,
+        altText: product.name + " catalog image",
+        isPrimary: true,
+        sortOrder: 1,
+      },
+    });
   }
 }
 
@@ -413,6 +412,8 @@ async function main() {
       driveType: "drive_type_6x4",
       enginePower: 430,
       wheelbase: 3200,
+      cargoLengthMm: undefined,
+      cargoVolumeCubicM: undefined,
       weightKg: 15000,
       sortOrder: 3,
     },
@@ -427,6 +428,8 @@ async function main() {
       driveType: "drive_type_4x2",
       enginePower: 340,
       wheelbase: 3200,
+      cargoLengthMm: undefined,
+      cargoVolumeCubicM: undefined,
       weightKg: 12500,
       sortOrder: 4,
     },
@@ -473,6 +476,8 @@ async function main() {
       driveType: "drive_type_6x4",
       enginePower: 430,
       wheelbase: 3200,
+      cargoLengthMm: undefined,
+      cargoVolumeCubicM: undefined,
       weightKg: 15000,
       sortOrder: 7,
     },
@@ -487,13 +492,15 @@ async function main() {
       driveType: "drive_type_4x2",
       enginePower: 340,
       wheelbase: 3200,
+      cargoLengthMm: undefined,
+      cargoVolumeCubicM: undefined,
       weightKg: 12500,
       sortOrder: 8,
     },
     {
-      slug: "sinotruk-howo-12-square-mixing-tank-truck",
+      slug: "sinotruk-howo-12-square-mixing-tank-truck-6x4",
       name: "SINOTRUK HOWO 12 SQUARE MIXING TANK TRUCK",
-      nameZh: "中国重汽 HOWO 12方搅拌车",
+      nameZh: "中国重汽 HOWO 12方搅拌罐卡车",
       brandSlug: "sinotruk-howo",
       categorySlug: "mixer-trucks",
       basePrice: 56000,
@@ -501,9 +508,26 @@ async function main() {
       driveType: "drive_type_6x4",
       enginePower: 380,
       wheelbase: 3600,
+      cargoLengthMm: undefined,
       cargoVolumeCubicM: 12,
       weightKg: 18500,
       sortOrder: 9,
+    },
+    {
+      slug: "sinotruk-howo-12-square-mixing-tank-truck-8x4",
+      name: "SINOTRUK HOWO 12 SQUARE MIXING TANK TRUCK",
+      nameZh: "中国重汽 HOWO 12方搅拌罐卡车",
+      brandSlug: "sinotruk-howo",
+      categorySlug: "mixer-trucks",
+      basePrice: 59000,
+      maxPrice: 80000,
+      driveType: "drive_type_8x4",
+      enginePower: 400,
+      wheelbase: 4200,
+      cargoLengthMm: undefined,
+      cargoVolumeCubicM: 12,
+      weightKg: 19800,
+      sortOrder: 10,
     },
     {
       slug: "sinotruk-howo-20-square-sprinkler-truck",
@@ -516,9 +540,10 @@ async function main() {
       driveType: "drive_type_6x4",
       enginePower: 360,
       wheelbase: 3600,
+      cargoLengthMm: undefined,
       cargoVolumeCubicM: 20,
       weightKg: 17000,
-      sortOrder: 10,
+      sortOrder: 11,
     },
     {
       slug: "sinotruk-howo-6x4-van-truck",
@@ -534,7 +559,7 @@ async function main() {
       cargoLengthMm: 7200,
       cargoVolumeCubicM: 26,
       weightKg: 16500,
-      sortOrder: 11,
+      sortOrder: 12,
     },
     {
       slug: "sinotruk-howo-6x4-warehouse-truck",
@@ -550,7 +575,7 @@ async function main() {
       cargoLengthMm: 7800,
       cargoVolumeCubicM: 28,
       weightKg: 16000,
-      sortOrder: 12,
+      sortOrder: 13,
     },
     {
       slug: "sinotruk-howo-tx-6x4-tractor-truck",
@@ -563,8 +588,10 @@ async function main() {
       driveType: "drive_type_6x4",
       enginePower: 430,
       wheelbase: 3200,
+      cargoLengthMm: undefined,
+      cargoVolumeCubicM: undefined,
       weightKg: 15200,
-      sortOrder: 13,
+      sortOrder: 14,
     },
     {
       slug: "sinotruk-howo-tx-6x4-dump-truck",
@@ -580,7 +607,7 @@ async function main() {
       cargoLengthMm: 7000,
       cargoVolumeCubicM: 20,
       weightKg: 19000,
-      sortOrder: 14,
+      sortOrder: 15,
     },
     {
       slug: "sinotruk-howo-tx-8x4-dump-truck",
@@ -596,7 +623,7 @@ async function main() {
       cargoLengthMm: 7800,
       cargoVolumeCubicM: 24,
       weightKg: 21000,
-      sortOrder: 15,
+      sortOrder: 16,
     },
     {
       slug: "sinotruk-howo-tx-8x4-tanker",
@@ -609,9 +636,10 @@ async function main() {
       driveType: "drive_type_8x4",
       enginePower: 430,
       wheelbase: 4200,
+      cargoLengthMm: undefined,
       cargoVolumeCubicM: 24,
       weightKg: 20000,
-      sortOrder: 16,
+      sortOrder: 17,
     },
     {
       slug: "shacman-f3000-tractor",
@@ -624,8 +652,10 @@ async function main() {
       driveType: "drive_type_6x4",
       enginePower: 420,
       wheelbase: 3200,
+      cargoLengthMm: undefined,
+      cargoVolumeCubicM: undefined,
       weightKg: 15000,
-      sortOrder: 17,
+      sortOrder: 18,
     },
     {
       slug: "shacman-6x4-dump-truck",
@@ -641,7 +671,7 @@ async function main() {
       cargoLengthMm: 6800,
       cargoVolumeCubicM: 18,
       weightKg: 18000,
-      sortOrder: 18,
+      sortOrder: 19,
     },
     {
       slug: "shacman-8x4-dump-truck",
@@ -657,7 +687,7 @@ async function main() {
       cargoLengthMm: 7600,
       cargoVolumeCubicM: 22,
       weightKg: 20500,
-      sortOrder: 19,
+      sortOrder: 20,
     },
     {
       slug: "semi-trailer",
@@ -673,7 +703,7 @@ async function main() {
       cargoLengthMm: 13000,
       cargoVolumeCubicM: 32,
       weightKg: 8000,
-      sortOrder: 20,
+      sortOrder: 21,
     },
     {
       slug: "customized-services",
@@ -689,7 +719,7 @@ async function main() {
       cargoLengthMm: undefined,
       cargoVolumeCubicM: undefined,
       weightKg: undefined,
-      sortOrder: 21,
+      sortOrder: 22,
     },
   ];
 
@@ -826,6 +856,14 @@ async function main() {
       labelZh: "首页副标题(中文)",
     },
     {
+      key: "home_hero_image_url",
+      value: "/assets/site/home-hero.jpg",
+      type: "image",
+      group: "home",
+      label: "Home Hero Image URL",
+      labelZh: "首页主视觉图片",
+    },
+    {
       key: "about_intro_en",
       value:
         "Tengyu International Truck Factory specializes in remanufacturing a wide range of commercial vehicles and trailers, delivering high-performance and durable customized solutions for construction, transportation, and engineering industries.",
@@ -928,7 +966,7 @@ async function main() {
     },
     {
       key: "about_image_url",
-      value: "",
+      value: "/assets/site/about-factory.jpg",
       type: "image",
       group: "about",
       label: "About Image URL",
