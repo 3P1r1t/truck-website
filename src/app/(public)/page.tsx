@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -32,7 +32,7 @@ type SolutionBlock = {
   desc: string;
 };
 
-const SOLUTION_BLOCKS: Record<Locale, SolutionBlock[]> = {
+const SOLUTION_DEFAULTS: Record<Locale, SolutionBlock[]> = {
   en: [
     {
       title: "Urban Distribution",
@@ -95,7 +95,51 @@ export default function HomePage() {
     settings.home_hero_image_url ||
     "https://images.unsplash.com/photo-1592417817098-8fd3d7dbe115?auto=format&fit=crop&w=1920&q=80";
 
-  const solutionBlocks = SOLUTION_BLOCKS[locale];
+  const solutionDefaults = SOLUTION_DEFAULTS[locale];
+  const solutionsKicker = getSettingValueByLocale(
+    settings,
+    "home_solutions_kicker",
+    locale,
+    locale === "zh" ? "行业方案" : "Sector Expertise"
+  );
+  const solutionsTitle = getSettingValueByLocale(
+    settings,
+    "home_solutions_title",
+    locale,
+    locale === "zh" ? "场景化运输解决方案" : "Industry-Specific Solutions"
+  );
+  const learnMoreText = getSettingValueByLocale(
+    settings,
+    "home_solutions_learn_more",
+    locale,
+    t(locale, "solution_learn_more")
+  );
+  const solutionDialogTitle = getSettingValueByLocale(
+    settings,
+    "home_solutions_dialog_title",
+    locale,
+    t(locale, "solution_dialog_title")
+  );
+
+  const solutionBlocks = useMemo(
+    () =>
+      [1, 2, 3].map((index) => ({
+        title: getSettingValueByLocale(
+          settings,
+          `home_solution_${index}_title`,
+          locale,
+          solutionDefaults[index - 1]?.title || ""
+        ),
+        desc: getSettingValueByLocale(
+          settings,
+          `home_solution_${index}_desc`,
+          locale,
+          solutionDefaults[index - 1]?.desc || ""
+        ),
+      })),
+    [settings, locale, solutionDefaults]
+  );
+
   const [activeSolution, setActiveSolution] = useState<SolutionBlock | null>(null);
   const [heroContactOpen, setHeroContactOpen] = useState(false);
 
@@ -134,7 +178,11 @@ export default function HomePage() {
                 className="rounded-sm border-white/40 bg-white/5 px-8 py-6 text-xs font-semibold uppercase tracking-[0.18em] text-white hover:bg-white/15"
                 onClick={() => setHeroContactOpen(true)}
               >
-                <span className="relative mr-2 inline-flex h-2 w-2"><span className="absolute inline-flex h-full w-full rounded-full bg-green-500 animate-ping" /><span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" /></span>{t(locale, "hero_cta_secondary")}
+                <span className="relative mr-2 inline-flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-500" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" />
+                </span>
+                {t(locale, "hero_cta_secondary")}
               </Button>
             </div>
           </div>
@@ -208,10 +256,8 @@ export default function HomePage() {
         <div className="section-shell">
           <div className="mb-12">
             <div className="tire-line mb-4" />
-            <p className="industrial-kicker">{locale === "zh" ? "行业方案" : "Sector Expertise"}</p>
-            <h2 className="mt-2 text-4xl font-bold uppercase tracking-tight">
-              {locale === "zh" ? "场景化运输解决方案" : "Industry-Specific Solutions"}
-            </h2>
+            <p className="industrial-kicker">{solutionsKicker}</p>
+            <h2 className="mt-2 text-4xl font-bold uppercase tracking-tight">{solutionsTitle}</h2>
           </div>
           <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
             {solutionBlocks.map((item) => (
@@ -226,7 +272,7 @@ export default function HomePage() {
                     className="h-10 rounded-sm text-xs font-semibold uppercase tracking-[0.14em]"
                     onClick={() => setActiveSolution(item)}
                   >
-                    {t(locale, "solution_learn_more")}
+                    {learnMoreText}
                   </Button>
                 </div>
               </article>
@@ -238,7 +284,13 @@ export default function HomePage() {
       <Dialog open={heroContactOpen} onOpenChange={setHeroContactOpen}>
         <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle><span className="relative mr-2 inline-flex h-2 w-2"><span className="absolute inline-flex h-full w-full rounded-full bg-green-500 animate-ping" /><span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" /></span>{t(locale, "hero_cta_secondary")}</DialogTitle>
+            <DialogTitle>
+              <span className="relative mr-2 inline-flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-500" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" />
+              </span>
+              {t(locale, "hero_cta_secondary")}
+            </DialogTitle>
           </DialogHeader>
           <ContactMethodCard
             sourceType="GENERAL"
@@ -251,7 +303,7 @@ export default function HomePage() {
         <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {t(locale, "solution_dialog_title")}
+              {solutionDialogTitle}
               {activeSolution ? `: ${activeSolution.title}` : ""}
             </DialogTitle>
           </DialogHeader>
@@ -266,4 +318,3 @@ export default function HomePage() {
     </div>
   );
 }
-

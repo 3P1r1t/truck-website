@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Menu, Phone, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSettings } from "@/lib/api";
@@ -22,7 +22,15 @@ export function Header() {
   const locale = useLocale();
   const { settings } = useSettings(locale);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [currentHash, setCurrentHash] = useState("");
   const pathname = usePathname();
+
+  useEffect(() => {
+    const syncHash = () => setCurrentHash(window.location.hash || "");
+    syncHash();
+    window.addEventListener("hashchange", syncHash);
+    return () => window.removeEventListener("hashchange", syncHash);
+  }, [pathname]);
 
   const siteName = getSettingValueByLocale(settings, "header_title", locale, "Tengyu Commercial Vehicles");
   const topNotice = getSettingValueByLocale(
@@ -73,9 +81,15 @@ export function Header() {
 
         <nav className="hidden items-center gap-8 text-[11px] font-semibold uppercase tracking-[0.2em] lg:flex">
           {navItems.map((item) => {
-            const active = item.href.startsWith("/#")
-              ? pathname === "/"
-              : pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
+            let active = false;
+            if (item.href === "/") {
+              active = pathname === "/" && currentHash !== "#solutions";
+            } else if (item.href === "/#solutions") {
+              active = pathname === "/" && currentHash === "#solutions";
+            } else {
+              active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+            }
+
             return (
               <Link
                 key={item.href}

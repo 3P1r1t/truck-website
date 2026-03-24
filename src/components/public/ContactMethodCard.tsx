@@ -15,6 +15,12 @@ type ContactProductOption = {
   name: string;
 };
 
+type CountryOption = {
+  value: string;
+  en: string;
+  zh: string;
+};
+
 type ContactMethodCardProps = {
   title?: string;
   sourceType?: "GENERAL" | "PRODUCT";
@@ -26,6 +32,39 @@ type ContactMethodCardProps = {
   className?: string;
   dark?: boolean;
 };
+
+const COUNTRY_OPTIONS: CountryOption[] = [
+  { value: "CN", en: "China", zh: "中国" },
+  { value: "US", en: "United States", zh: "美国" },
+  { value: "CA", en: "Canada", zh: "加拿大" },
+  { value: "MX", en: "Mexico", zh: "墨西哥" },
+  { value: "BR", en: "Brazil", zh: "巴西" },
+  { value: "AR", en: "Argentina", zh: "阿根廷" },
+  { value: "GB", en: "United Kingdom", zh: "英国" },
+  { value: "DE", en: "Germany", zh: "德国" },
+  { value: "FR", en: "France", zh: "法国" },
+  { value: "IT", en: "Italy", zh: "意大利" },
+  { value: "ES", en: "Spain", zh: "西班牙" },
+  { value: "RU", en: "Russia", zh: "俄罗斯" },
+  { value: "TR", en: "Turkey", zh: "土耳其" },
+  { value: "SA", en: "Saudi Arabia", zh: "沙特阿拉伯" },
+  { value: "AE", en: "United Arab Emirates", zh: "阿联酋" },
+  { value: "EG", en: "Egypt", zh: "埃及" },
+  { value: "ZA", en: "South Africa", zh: "南非" },
+  { value: "NG", en: "Nigeria", zh: "尼日利亚" },
+  { value: "IN", en: "India", zh: "印度" },
+  { value: "PK", en: "Pakistan", zh: "巴基斯坦" },
+  { value: "TH", en: "Thailand", zh: "泰国" },
+  { value: "VN", en: "Vietnam", zh: "越南" },
+  { value: "MY", en: "Malaysia", zh: "马来西亚" },
+  { value: "ID", en: "Indonesia", zh: "印度尼西亚" },
+  { value: "PH", en: "Philippines", zh: "菲律宾" },
+  { value: "JP", en: "Japan", zh: "日本" },
+  { value: "KR", en: "South Korea", zh: "韩国" },
+  { value: "AU", en: "Australia", zh: "澳大利亚" },
+  { value: "NZ", en: "New Zealand", zh: "新西兰" },
+  { value: "OTHER", en: "Other", zh: "其他" },
+];
 
 export function ContactMethodCard({
   title,
@@ -204,7 +243,18 @@ export function ContactMethodCard({
             </div>
             <div className="space-y-1">
               <Label className={cn("text-[11px] font-semibold uppercase tracking-[0.15em]", dark ? "text-slate-200" : "")}>{t(locale, "inquiry_country")}</Label>
-              <Input value={form.country} onChange={(e) => setForm((old) => ({ ...old, country: e.target.value }))} />
+              <select
+                className="h-10 w-full rounded-sm border border-input bg-white px-3 text-sm text-slate-900"
+                value={form.country}
+                onChange={(e) => setForm((old) => ({ ...old, country: e.target.value }))}
+              >
+                <option value="">{locale === "zh" ? "请选择国家" : "Select Country"}</option>
+                {COUNTRY_OPTIONS.map((country) => (
+                  <option key={country.value} value={country.value}>
+                    {locale === "zh" ? country.zh : country.en}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 
