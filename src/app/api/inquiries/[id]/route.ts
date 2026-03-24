@@ -1,4 +1,4 @@
-export const dynamic = "force-dynamic";
+﻿export const dynamic = "force-dynamic";
 
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
@@ -6,6 +6,7 @@ import { fail, ok } from "@/lib/utils";
 import { requireAdmin } from "@/lib/admin-auth";
 import { getLocale } from "@/lib/api-helpers";
 import { pickLocalized } from "@/lib/i18n";
+import { decodeInquiryIntentNotes } from "@/lib/inquiry-source";
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -33,8 +34,12 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       return fail("Inquiry not found", 404);
     }
 
+    const decoded = decodeInquiryIntentNotes(inquiry.intentNotes);
+
     return ok({
       ...inquiry,
+      sourceType: decoded.sourceType || "PRODUCT",
+      intentNotes: decoded.intentNotes || null,
       followUpLogs: Array.isArray(inquiry.followUpLogs) ? inquiry.followUpLogs : [],
       product: inquiry.product
         ? {

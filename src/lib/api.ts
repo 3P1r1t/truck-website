@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import useSWR, { mutate } from "swr";
 import type {
@@ -579,8 +579,9 @@ export async function deleteArticle(slug: string) {
 }
 
 export async function submitInquiry(payload: {
-  productId: string;
-  fullName: string;
+  productId?: string;
+  sourceType?: "GENERAL" | "PRODUCT";
+  fullName?: string;
   email: string;
   phone?: string;
   country?: string;
@@ -679,3 +680,4 @@ export async function adminUpdateSettings(items: SettingItem[]) {
   await mutate((key) => typeof key === "string" && key.startsWith("/admin/settings"));
   return data;
 }
+

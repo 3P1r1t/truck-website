@@ -1,4 +1,4 @@
-export const dynamic = "force-dynamic";
+﻿export const dynamic = "force-dynamic";
 
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
@@ -7,6 +7,12 @@ import { fail, ok, parsePagination } from "@/lib/utils";
 import { requireAdmin } from "@/lib/admin-auth";
 import { getLocale } from "@/lib/api-helpers";
 import { pickLocalized } from "@/lib/i18n";
+import {
+  decodeInquiryIntentNotes,
+  encodeInquiryIntentNotes,
+  normalizeInquirySourceType,
+  type InquirySourceType,
+} from "@/lib/inquiry-source";
 
 const INQUIRY_STATUSES = [
   "PENDING",
@@ -16,6 +22,30 @@ const INQUIRY_STATUSES = [
   "CONVERTED",
   "ABANDONED",
 ] as const;
+
+const DEFAULT_GENERAL_NAME = "General Inquiry Lead";
+const DEFAULT_PRODUCT_NAME = "Website Visitor";
+
+async function resolveInquiryProduct(productId?: string | null) {
+  if (productId) {
+    const product = await prisma.product.findUnique({
+      where: { id: productId },
+      select: { id: true, isActive: true },
+    });
+
+    if (!product || !product.isActive) {
+      return null;
+    }
+
+    return product;
+  }
+
+  return prisma.product.findFirst({
+    where: { isActive: true },
+    orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+    select: { id: true, isActive: true },
+  });
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -27,28 +57,38 @@ export async function POST(request: NextRequest) {
 
     const payload = parsed.data;
 
-    const product = await prisma.product.findUnique({
-      where: { id: payload.productId },
-      select: { id: true, isActive: true },
-    });
+    const inferredSourceType: InquirySourceType = payload.productId
+      ? normalizeInquirySourceType(payload.sourceType || "PRODUCT")
+      : "GENERAL";
 
-    if (!product || !product.isActive) {
+    const product = await resolveInquiryProduct(payload.productId);
+    if (!product) {
       return fail("Product not found", 404);
     }
 
     const created = await prisma.inquiry.create({
       data: {
-        productId: payload.productId,
-        fullName: payload.fullName,
+        productId: product.id,
+        fullName:
+          payload.fullName?.trim() ||
+          (inferredSourceType === "GENERAL" ? DEFAULT_GENERAL_NAME : DEFAULT_PRODUCT_NAME),
         email: payload.email,
         phone: payload.phone || null,
         country: payload.country || null,
         message: payload.message || null,
+        intentNotes: encodeInquiryIntentNotes(null, inferredSourceType),
         followUpLogs: [],
       },
     });
 
-    return ok(created, { status: 201 });
+    return ok(
+      {
+        ...created,
+        sourceType: inferredSourceType,
+        intentNotes: "",
+      },
+      { status: 201 }
+    );
   } catch (error) {
     console.error("POST /api/inquiries failed", error);
     return fail("Failed to submit inquiry", 500);
@@ -97,17 +137,22 @@ export async function GET(request: NextRequest) {
       prisma.inquiry.count({ where }),
     ]);
 
-    const mapped = items.map((item) => ({
-      ...item,
-      followUpLogs: Array.isArray(item.followUpLogs) ? item.followUpLogs : [],
-      product: item.product
-        ? {
-            id: item.product.id,
-            slug: item.product.slug,
-            name: pickLocalized(item.product.name, item.product.nameZh, locale),
-          }
-        : null,
-    }));
+    const mapped = items.map((item) => {
+      const decoded = decodeInquiryIntentNotes(item.intentNotes);
+      return {
+        ...item,
+        sourceType: decoded.sourceType || "PRODUCT",
+        intentNotes: decoded.intentNotes || null,
+        followUpLogs: Array.isArray(item.followUpLogs) ? item.followUpLogs : [],
+        product: item.product
+          ? {
+              id: item.product.id,
+              slug: item.product.slug,
+              name: pickLocalized(item.product.name, item.product.nameZh, locale),
+            }
+          : null,
+      };
+    });
 
     return ok(mapped, { pagination: { page, pageSize, total } });
   } catch (error) {

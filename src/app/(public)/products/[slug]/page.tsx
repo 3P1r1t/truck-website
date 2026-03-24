@@ -36,11 +36,11 @@ export default function ProductDetailPage() {
   }, [driveTypes]);
 
   if (isLoading) {
-    return <div className="container mx-auto px-4 py-8">{t(locale, "loading")}</div>;
+    return <div className="section-shell py-10">{t(locale, "loading")}</div>;
   }
 
   if (!product) {
-    return <div className="container mx-auto px-4 py-8">{t(locale, "not_found")}</div>;
+    return <div className="section-shell py-10">{t(locale, "not_found")}</div>;
   }
 
   const specRows: Array<[string, string]> = [
@@ -64,48 +64,48 @@ export default function ProductDetailPage() {
   ];
 
   return (
-    <div className="container mx-auto space-y-8 px-4 py-8">
-      <div>
-        <h1 className="text-3xl font-bold">{product.name}</h1>
-        <p className="mt-2 text-muted-foreground">{product.shortDescription || product.description}</p>
-      </div>
-
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-        <ProductGallery images={product.images} />
-        <div className="space-y-6">
-          <div>
-            <p className="text-3xl font-bold text-primary">
-              {formatPriceRange(
-                product.basePrice,
-                product.maxPrice,
-                product.currency,
-                locale === "zh" ? "zh-CN" : "en-US"
-              )}
-            </p>
-          </div>
-
-          <InquiryForm productId={product.id} />
+    <div className="bg-slate-50 pb-14">
+      <section className="bg-slate-950 py-14 text-white">
+        <div className="section-shell">
+          <p className="industrial-kicker text-red-300">{product.category?.name || "Commercial Vehicles"}</p>
+          <h1 className="mt-3 text-5xl font-bold uppercase tracking-tight">{product.name}</h1>
+          <p className="mt-4 max-w-3xl text-slate-300">{product.shortDescription || product.description}</p>
+          <p className="mt-6 text-3xl font-semibold text-white">
+            {formatPriceRange(
+              product.basePrice,
+              product.maxPrice,
+              product.currency,
+              locale === "zh" ? "zh-CN" : "en-US"
+            )}
+          </p>
         </div>
-      </div>
+      </section>
 
-      <section>
-        <h2 className="mb-3 text-2xl font-semibold">{t(locale, "product_specs")}</h2>
-        <div className="overflow-hidden rounded border">
+      <section className="section-shell -mt-8 grid grid-cols-1 gap-8 lg:grid-cols-2">
+        <ProductGallery images={product.images} />
+        <InquiryForm productId={product.id} />
+      </section>
+
+      <section className="section-shell mt-10 space-y-8">
+        <div className="industrial-panel overflow-hidden">
+          <h2 className="border-b border-slate-100 px-5 py-4 text-2xl font-semibold uppercase tracking-tight">
+            {t(locale, "product_specs")}
+          </h2>
           {specRows.map(([label, value]) => (
-            <div key={label} className="grid grid-cols-2 border-b px-4 py-2 text-sm last:border-b-0">
-              <span className="text-muted-foreground">{label}</span>
+            <div key={label} className="grid grid-cols-2 border-b px-5 py-3 text-sm last:border-b-0">
+              <span className="text-slate-500">{label}</span>
               <span>{value}</span>
             </div>
           ))}
         </div>
-      </section>
 
-      {product.description ? (
-        <section>
-          <h2 className="mb-3 text-2xl font-semibold">{locale === "zh" ? "产品描述" : "Description"}</h2>
-          <div className="whitespace-pre-wrap text-sm leading-7 text-muted-foreground">{product.description}</div>
-        </section>
-      ) : null}
+        {product.description ? (
+          <div className="industrial-panel p-5">
+            <h2 className="text-2xl font-semibold uppercase tracking-tight">{locale === "zh" ? "产品描述" : "Description"}</h2>
+            <div className="mt-4 whitespace-pre-wrap text-sm leading-7 text-slate-600">{product.description}</div>
+          </div>
+        ) : null}
+      </section>
     </div>
   );
 }

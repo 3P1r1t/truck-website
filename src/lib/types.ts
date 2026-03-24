@@ -1,4 +1,4 @@
-export type Locale = "en" | "zh";
+﻿export type Locale = "en" | "zh";
 
 export type Brand = {
   id: string;
@@ -108,6 +108,8 @@ export type InquiryFollowUpLog = {
   nextFollowUpAt?: string | null;
 };
 
+export type InquirySourceType = "GENERAL" | "PRODUCT";
+
 export type Inquiry = {
   id: string;
   productId: string;
@@ -116,6 +118,7 @@ export type Inquiry = {
   phone?: string | null;
   country?: string | null;
   message?: string | null;
+  sourceType?: InquirySourceType;
   status: InquiryStatus;
   tag: InquiryTag;
   intentNotes?: string | null;
@@ -184,3 +187,5 @@ export type ApiEnvelope<T> = {
   pagination?: PaginationMeta;
   errors?: unknown;
 };
+
+

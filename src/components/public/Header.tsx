@@ -1,14 +1,16 @@
 ﻿"use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Menu, Truck, X } from "lucide-react";
+import { Menu, Phone, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSettings } from "@/lib/api";
 import { useLocale } from "@/lib/use-locale";
 import { t } from "@/lib/site-dictionary";
 import { getSettingValueByLocale, Locale } from "@/lib/i18n";
+import { cn } from "@/lib/utils";
 
 function withLang(path: string, locale: Locale) {
   return `${path}${path.includes("?") ? "&" : "?"}lang=${locale}`;
@@ -20,7 +22,14 @@ export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
 
-  const siteName = getSettingValueByLocale(settings, "header_title", locale, "Truck Showcase");
+  const siteName = getSettingValueByLocale(settings, "header_title", locale, "Tengyu Commercial Vehicles");
+  const topNotice = getSettingValueByLocale(
+    settings,
+    "header_top_notice",
+    locale,
+    locale === "zh" ? "TENGYU GLOBAL: 服务覆盖 50+ 国家与地区" : "TENGYU GLOBAL: OPERATING IN 50+ COUNTRIES"
+  );
+  const supportPhone = settings.support_phone || "+86-188-0000-0000";
 
   const navItems = [
     { href: "/", label: t(locale, "nav_home") },
@@ -38,67 +47,97 @@ export function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <Link href={withLang("/", locale)} className="flex items-center gap-2">
-          <Truck className="h-6 w-6" />
-          <span className="text-lg font-bold">{siteName}</span>
+    <header className="sticky top-0 z-50 border-b border-slate-200/70 bg-white/90 backdrop-blur-md">
+      <div className="hidden border-b border-slate-800/30 bg-slate-950 text-[10px] uppercase tracking-[0.2em] text-slate-300 md:block">
+        <div className="section-shell flex h-9 items-center justify-between">
+          <span>{topNotice}</span>
+          <span className="inline-flex items-center gap-2">
+            <Phone className="h-3.5 w-3.5" />
+            {supportPhone}
+          </span>
+        </div>
+      </div>
+
+      <div className="section-shell flex h-20 items-center justify-between">
+        <Link href={withLang("/", locale)} className="flex items-center gap-3">
+          <Image src="/tengyu.png" alt={siteName} width={164} height={48} className="h-10 w-auto md:h-12" priority />
+          <span className="hidden h-6 border-l border-slate-300 sm:block" />
+          <span className="hidden text-[11px] font-semibold uppercase tracking-[0.25em] text-slate-500 sm:block">
+            {locale === "zh" ? "工业制造" : "Industrial Excellence"}
+          </span>
         </Link>
 
-        <nav className="hidden items-center gap-6 md:flex">
-          {navItems.map((item) => (
-            <Link key={item.href} href={withLang(item.href, locale)} className="text-sm text-muted-foreground hover:text-foreground">
-              {item.label}
-            </Link>
-          ))}
-          <Button size="sm" asChild>
-            <Link href={withLang("/contact", locale)}>{t(locale, "nav_quote")}</Link>
-          </Button>
-          <div className="flex items-center rounded border">
+        <nav className="hidden items-center gap-8 text-[11px] font-semibold uppercase tracking-[0.2em] lg:flex">
+          {navItems.map((item) => {
+            const active = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
+            return (
+              <Link
+                key={item.href}
+                href={withLang(item.href, locale)}
+                className={cn("transition-colors", active ? "text-primary" : "text-slate-600 hover:text-primary")}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
+        </nav>
+
+        <div className="hidden items-center gap-4 lg:flex">
+          <div className="rounded-sm border border-slate-200 bg-slate-50 p-0.5 text-[10px] font-semibold uppercase tracking-widest">
             <button
-              className={`px-2 py-1 text-xs ${locale === "en" ? "bg-primary text-primary-foreground" : ""}`}
+              className={cn("px-2.5 py-1 transition-colors", locale === "en" ? "bg-primary text-white" : "text-slate-600")}
               onClick={() => switchLang("en")}
             >
               EN
             </button>
             <button
-              className={`px-2 py-1 text-xs ${locale === "zh" ? "bg-primary text-primary-foreground" : ""}`}
+              className={cn("px-2.5 py-1 transition-colors", locale === "zh" ? "bg-primary text-white" : "text-slate-600")}
               onClick={() => switchLang("zh")}
             >
               中文
             </button>
           </div>
-        </nav>
+          <Button asChild className="rounded-sm bg-primary px-6 text-[11px] font-semibold uppercase tracking-[0.2em] hover:bg-primary/90">
+            <Link href={withLang("/contact", locale)}>{t(locale, "nav_quote")}</Link>
+          </Button>
+        </div>
 
-        <button className="md:hidden" onClick={() => setMobileOpen((v) => !v)}>
+        <button className="rounded-sm border border-slate-200 p-2 text-slate-700 lg:hidden" onClick={() => setMobileOpen((v) => !v)}>
           {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
       </div>
 
-      {mobileOpen && (
-        <nav className="border-t px-4 py-3 md:hidden">
-          <div className="flex flex-col gap-3">
+      {mobileOpen ? (
+        <div className="border-t border-slate-200 bg-white lg:hidden">
+          <div className="section-shell space-y-3 py-4">
             {navItems.map((item) => (
-              <Link key={item.href} href={withLang(item.href, locale)} onClick={() => setMobileOpen(false)}>
+              <Link
+                key={item.href}
+                href={withLang(item.href, locale)}
+                onClick={() => setMobileOpen(false)}
+                className="block border-b border-slate-100 pb-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-700"
+              >
                 {item.label}
               </Link>
             ))}
-            <Button size="sm" asChild>
-              <Link href={withLang("/contact", locale)} onClick={() => setMobileOpen(false)}>
-                {t(locale, "nav_quote")}
-              </Link>
-            </Button>
-            <div className="flex gap-2">
-              <Button size="sm" variant={locale === "en" ? "default" : "outline"} onClick={() => switchLang("en")}>
-                EN
-              </Button>
-              <Button size="sm" variant={locale === "zh" ? "default" : "outline"} onClick={() => switchLang("zh")}>
-                中文
+            <div className="flex items-center justify-between">
+              <div className="flex gap-2">
+                <Button size="sm" variant={locale === "en" ? "default" : "outline"} onClick={() => switchLang("en")}>
+                  EN
+                </Button>
+                <Button size="sm" variant={locale === "zh" ? "default" : "outline"} onClick={() => switchLang("zh")}>
+                  中文
+                </Button>
+              </div>
+              <Button size="sm" asChild>
+                <Link href={withLang("/contact", locale)} onClick={() => setMobileOpen(false)}>
+                  {t(locale, "nav_quote")}
+                </Link>
               </Button>
             </div>
           </div>
-        </nav>
-      )}
+        </div>
+      ) : null}
     </header>
   );
 }

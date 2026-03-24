@@ -1,7 +1,8 @@
 ﻿"use client";
 
+import Image from "next/image";
 import Link from "next/link";
-import { Mail, MapPin, MessageCircle, Phone, Truck } from "lucide-react";
+import { Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 import { useSettings } from "@/lib/api";
 import { useLocale } from "@/lib/use-locale";
 import { t } from "@/lib/site-dictionary";
@@ -16,15 +17,15 @@ export function Footer() {
   const locale = useLocale();
   const { settings } = useSettings(locale);
 
-  const siteName = getSettingValueByLocale(settings, "site_title", locale, "Truck Showcase");
+  const siteName = getSettingValueByLocale(settings, "site_title", locale, "Tengyu Commercial Vehicles");
   const copyright = getSettingValueByLocale(
     settings,
     "footer_copyright_text",
     locale,
     `${siteName}. All rights reserved.`
   );
-  const email = settings.support_email || "support@example.com";
-  const phone = settings.support_phone || "+1-000-000-0000";
+  const email = settings.support_email || "sales@tengyutruck.com";
+  const phone = settings.support_phone || "+86-188-0000-0000";
   const whatsappNumber = settings.whatsapp_number || phone;
   const whatsappMessage = getSettingValueByLocale(
     settings,
@@ -36,51 +37,67 @@ export function Footer() {
   const address = getSettingValueByLocale(settings, "contact_address", locale, "");
 
   return (
-    <footer className="border-t bg-muted/30">
-      <div className="container mx-auto grid grid-cols-1 gap-8 px-4 py-10 md:grid-cols-3">
-        <div className="space-y-2">
-          <Link href={withLang("/", locale)} className="flex items-center gap-2 font-semibold">
-            <Truck className="h-5 w-5" />
-            {siteName}
-          </Link>
-          <p className="text-sm text-muted-foreground">{getSettingValueByLocale(settings, "home_hero_subtitle", locale, "")}</p>
+    <footer className="border-t border-white/10 bg-black text-slate-400">
+      <div className="section-shell grid grid-cols-1 gap-10 py-16 md:grid-cols-2 lg:grid-cols-4">
+        <div className="space-y-5 md:col-span-2">
+          <Image src="/tengyu.png" alt="Tengyu" width={170} height={46} className="h-9 w-auto brightness-0 invert" />
+          <p className="max-w-md text-sm leading-7">
+            {getSettingValueByLocale(
+              settings,
+              "home_hero_subtitle",
+              locale,
+              locale === "zh"
+                ? "腾宇专注商用车再制造与全球交付服务，为不同运输场景提供可靠方案。"
+                : "Tengyu focuses on remanufactured commercial vehicles and global delivery for demanding logistics scenarios."
+            )}
+          </p>
         </div>
 
         <div>
-          <h4 className="mb-2 font-semibold">{t(locale, "nav_products")}</h4>
-          <div className="flex flex-col gap-1 text-sm text-muted-foreground">
-            <Link href={withLang("/products", locale)}>{t(locale, "nav_products")}</Link>
-            <Link href={withLang("/articles", locale)}>{t(locale, "nav_articles")}</Link>
-            <Link href={withLang("/about", locale)}>{t(locale, "nav_about")}</Link>
-            <Link href={withLang("/contact", locale)}>{t(locale, "nav_contact")}</Link>
+          <h4 className="mb-5 text-[10px] font-semibold uppercase tracking-[0.3em] text-white">
+            {locale === "zh" ? "导航" : "Navigation"}
+          </h4>
+          <div className="space-y-3 text-[11px] font-semibold uppercase tracking-[0.15em]">
+            <Link href={withLang("/products", locale)} className="block hover:text-primary">
+              {t(locale, "nav_products")}
+            </Link>
+            <Link href={withLang("/articles", locale)} className="block hover:text-primary">
+              {t(locale, "nav_articles")}
+            </Link>
+            <Link href={withLang("/about", locale)} className="block hover:text-primary">
+              {t(locale, "nav_about")}
+            </Link>
+            <Link href={withLang("/contact", locale)} className="block hover:text-primary">
+              {t(locale, "nav_contact")}
+            </Link>
           </div>
         </div>
 
         <div>
-          <h4 className="mb-2 font-semibold">{t(locale, "footer_contact")}</h4>
-          <div className="space-y-2 text-sm text-muted-foreground">
+          <h4 className="mb-5 text-[10px] font-semibold uppercase tracking-[0.3em] text-white">{t(locale, "footer_contact")}</h4>
+          <div className="space-y-3 text-sm">
             <div className="flex items-center gap-2">
-              <Phone className="h-4 w-4" />
-              {phone}
+              <Phone className="h-4 w-4 text-primary" />
+              <span>{phone}</span>
             </div>
             {whatsappLink ? (
-              <a className="flex items-center gap-2 text-green-700 hover:underline" href={whatsappLink} target="_blank" rel="noreferrer">
-                <MessageCircle className="h-4 w-4" />
-                {t(locale, "contact_whatsapp")}: {whatsappNumber}
+              <a className="flex items-center gap-2 hover:text-primary" href={whatsappLink} target="_blank" rel="noreferrer">
+                <MessageCircle className="h-4 w-4 text-primary" />
+                <span>{whatsappNumber}</span>
               </a>
             ) : null}
             <div className="flex items-center gap-2">
-              <Mail className="h-4 w-4" />
-              {email}
+              <Mail className="h-4 w-4 text-primary" />
+              <span>{email}</span>
             </div>
             <div className="flex items-start gap-2">
-              <MapPin className="mt-0.5 h-4 w-4" />
+              <MapPin className="mt-0.5 h-4 w-4 text-primary" />
               <span>{address}</span>
             </div>
           </div>
         </div>
       </div>
-      <div className="border-t px-4 py-3 text-center text-xs text-muted-foreground">{copyright}</div>
+      <div className="border-t border-white/10 py-4 text-center text-[10px] uppercase tracking-[0.2em] text-slate-500">{copyright}</div>
     </footer>
   );
 }

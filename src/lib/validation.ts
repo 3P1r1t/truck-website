@@ -1,4 +1,4 @@
-import { z } from "zod";
+﻿import { z } from "zod";
 
 const imageUrlSchema = z.preprocess(
   (value) => {
@@ -83,8 +83,9 @@ export const articleCreateSchema = z.object({
 export const articleUpdateSchema = articleCreateSchema.partial();
 
 export const inquiryCreateSchema = z.object({
-  productId: z.string().min(1),
-  fullName: z.string().min(1),
+  productId: z.string().min(1).optional().nullable(),
+  sourceType: z.enum(["GENERAL", "PRODUCT"]).optional(),
+  fullName: z.string().min(1).optional().nullable(),
   email: z.string().email(),
   phone: z.string().optional().nullable(),
   country: z.string().optional().nullable(),

@@ -12,6 +12,7 @@ type StatusAction = { status: Inquiry["status"]; zh: string; en: string };
 const ZH = {
   pageTitle: "\u8BE2\u76D8\u7BA1\u7406",
   product: "\u4EA7\u54C1",
+  source: "\u6765\u6E90",
   customer: "\u5BA2\u6237",
   status: "\u72B6\u6001",
   tag: "\u6807\u7B7E",
@@ -53,6 +54,11 @@ const TAG_LABEL: Record<Inquiry["tag"], { zh: string; en: string }> = {
   HIGH: { zh: "\u9AD8\u610F\u5411", en: "High" },
   MEDIUM: { zh: "\u4E2D\u7B49\u610F\u5411", en: "Medium" },
   LOW: { zh: "\u4F4E\u610F\u5411", en: "Low" },
+};
+
+const SOURCE_LABEL: Record<"GENERAL" | "PRODUCT", { zh: string; en: string }> = {
+  GENERAL: { zh: "\u901A\u7528\u8BE2\u76D8", en: "General Inquiry" },
+  PRODUCT: { zh: "\u8F66\u578B\u8BE2\u76D8", en: "Product Inquiry" },
 };
 
 const STATUS_COLOR: Record<Inquiry["status"], string> = {
@@ -134,6 +140,11 @@ export default function AdminInquiriesPage() {
     [locale]
   );
 
+  const sourceText = useMemo(
+    () => (value: "GENERAL" | "PRODUCT") => (locale === "zh" ? SOURCE_LABEL[value].zh : SOURCE_LABEL[value].en),
+    [locale]
+  );
+
   const openEditor = (item: Inquiry, actionStatus?: Inquiry["status"]) => {
     setEditing(item);
     setTargetStatus(actionStatus || null);
@@ -156,6 +167,7 @@ export default function AdminInquiriesPage() {
           <thead>
             <tr className="border-b bg-muted/30 text-left">
               <th className="px-3 py-2">{locale === "zh" ? ZH.product : "Product"}</th>
+              <th className="px-3 py-2">{locale === "zh" ? ZH.source : "Source"}</th>
               <th className="px-3 py-2">{locale === "zh" ? ZH.customer : "Customer"}</th>
               <th className="px-3 py-2">{locale === "zh" ? ZH.status : "Status"}</th>
               <th className="px-3 py-2">{locale === "zh" ? ZH.tag : "Tag"}</th>
@@ -167,7 +179,16 @@ export default function AdminInquiriesPage() {
           <tbody>
             {inquiries.map((inquiry) => (
               <tr key={inquiry.id} className="border-b align-top">
-                <td className="px-3 py-2">{inquiry.product?.name || inquiry.productId}</td>
+                <td className="px-3 py-2">
+                  {inquiry.sourceType === "GENERAL"
+                    ? (locale === "zh" ? "通用询盘" : "General Inquiry")
+                    : inquiry.product?.name || inquiry.productId}
+                </td>
+                <td className="px-3 py-2">
+                  <span className={`inline-flex rounded-full border bg-slate-100 px-2 py-0.5 text-xs text-slate-700`}>
+                    {sourceText((inquiry.sourceType as "GENERAL" | "PRODUCT") || "PRODUCT")}
+                  </span>
+                </td>
                 <td className="px-3 py-2">
                   <div>{inquiry.fullName}</div>
                   <div className="text-xs text-muted-foreground">{inquiry.email}</div>
@@ -214,7 +235,7 @@ export default function AdminInquiriesPage() {
             ))}
             {inquiries.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-3 py-4 text-muted-foreground">
+                <td colSpan={8} className="px-3 py-4 text-muted-foreground">
                   {locale === "zh" ? ZH.noInquiries : "No inquiries"}
                 </td>
               </tr>
@@ -418,3 +439,4 @@ export default function AdminInquiriesPage() {
     </div>
   );
 }
+

@@ -26,8 +26,8 @@ export default function ContactPage() {
     detail: "",
   });
 
-  const supportEmail = settings.support_email || "support@example.com";
-  const supportPhone = settings.support_phone || "+1-000-000-0000";
+  const supportEmail = settings.support_email || "sales@tengyutruck.com";
+  const supportPhone = settings.support_phone || "+86-188-0000-0000";
   const whatsappNumber = settings.whatsapp_number || supportPhone;
   const whatsappMessage = getSettingValueByLocale(
     settings,
@@ -41,104 +41,119 @@ export default function ContactPage() {
   const selectedProduct = useMemo(() => products.find((item) => item.id === form.productId), [products, form.productId]);
 
   return (
-    <div className="container mx-auto grid grid-cols-1 gap-8 px-4 py-8 lg:grid-cols-2">
-      <div className="space-y-4">
-        <h1 className="text-3xl font-bold">{locale === "zh" ? "联系我们" : "Contact Us"}</h1>
-        <p className="text-muted-foreground">
-          {locale === "zh" ? "提交询盘后，我们将尽快与您联系。" : "Submit your inquiry and our team will contact you soon."}
-        </p>
-        <div className="rounded border p-4 text-sm text-muted-foreground">
-          <p>Email: {supportEmail}</p>
-          <p>{locale === "zh" ? "电话" : "Phone"}: {supportPhone}</p>
-          {whatsappLink ? (
-            <p>
-              WhatsApp: <a className="text-green-700 hover:underline" href={whatsappLink} target="_blank" rel="noreferrer">{whatsappNumber}</a>
-            </p>
-          ) : null}
-          <p>{locale === "zh" ? "地址" : "Address"}: {address}</p>
+    <div className="bg-slate-50 pb-16">
+      <section className="bg-slate-950 py-16 text-white">
+        <div className="section-shell">
+          <div className="tire-line mb-4" />
+          <h1 className="text-5xl font-bold uppercase tracking-tight">{locale === "zh" ? "联系我们" : "Contact Us"}</h1>
+          <p className="mt-4 max-w-3xl text-slate-300">
+            {locale === "zh" ? "提交询盘后，我们会尽快为您匹配车型与方案。" : "Submit your inquiry and we will quickly match your fleet plan."}
+          </p>
         </div>
-      </div>
+      </section>
 
-      <form
-        className="space-y-3 rounded border p-5"
-        onSubmit={async (event) => {
-          event.preventDefault();
-          setSubmitting(true);
-          setError("");
-          setMessage("");
-          try {
-            await submitInquiry({
-              productId: form.productId,
-              fullName: form.fullName,
-              email: form.email,
-              phone: form.phone || undefined,
-              country: form.country || undefined,
-              message: form.detail || undefined,
-            });
-            setMessage(locale === "zh" ? "提交成功，我们会尽快联系您。" : "Submitted successfully. We will contact you soon.");
-            setForm({ productId: "", fullName: "", email: "", phone: "", country: "", detail: "" });
-          } catch (err: any) {
-            setError(err?.message || "Submit failed");
-          } finally {
-            setSubmitting(false);
-          }
-        }}
-      >
-        <div className="space-y-1">
-          <Label>{locale === "zh" ? "意向车型" : "Interested Product"}</Label>
-          <select
-            required
-            className="h-10 w-full rounded border px-3"
-            value={form.productId}
-            onChange={(e) => setForm((old) => ({ ...old, productId: e.target.value }))}
-          >
-            <option value="">{locale === "zh" ? "请选择" : "Select"}</option>
-            {products.map((product) => (
-              <option value={product.id} key={product.id}>
-                {product.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-          <div className="space-y-1">
-            <Label>{locale === "zh" ? "姓名" : "Full Name"}</Label>
-            <Input required value={form.fullName} onChange={(e) => setForm((old) => ({ ...old, fullName: e.target.value }))} />
-          </div>
-          <div className="space-y-1">
-            <Label>Email</Label>
-            <Input type="email" required value={form.email} onChange={(e) => setForm((old) => ({ ...old, email: e.target.value }))} />
+      <section className="section-shell -mt-8 grid grid-cols-1 gap-8 lg:grid-cols-2">
+        <div className="industrial-panel p-6">
+          <h2 className="text-3xl font-semibold uppercase tracking-tight">{locale === "zh" ? "联系方式" : "Contact Details"}</h2>
+          <div className="mt-5 space-y-3 text-sm text-slate-600">
+            <p>Email: {supportEmail}</p>
+            <p>{locale === "zh" ? "电话" : "Phone"}: {supportPhone}</p>
+            {whatsappLink ? (
+              <p>
+                WhatsApp:{" "}
+                <a className="text-primary hover:underline" href={whatsappLink} target="_blank" rel="noreferrer">
+                  {whatsappNumber}
+                </a>
+              </p>
+            ) : null}
+            <p>{locale === "zh" ? "地址" : "Address"}: {address}</p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+        <form
+          className="industrial-panel space-y-3 p-6"
+          onSubmit={async (event) => {
+            event.preventDefault();
+            setSubmitting(true);
+            setError("");
+            setMessage("");
+            try {
+              const sourceType = form.productId ? "PRODUCT" : "GENERAL";
+              await submitInquiry({
+                productId: form.productId || undefined,
+                sourceType,
+                fullName: form.fullName,
+                email: form.email,
+                phone: form.phone || undefined,
+                country: form.country || undefined,
+                message: form.detail || undefined,
+              });
+              setMessage(locale === "zh" ? "提交成功，我们会尽快联系您。" : "Submitted successfully. We will contact you soon.");
+              setForm({ productId: "", fullName: "", email: "", phone: "", country: "", detail: "" });
+            } catch (err: any) {
+              setError(err?.message || "Submit failed");
+            } finally {
+              setSubmitting(false);
+            }
+          }}
+        >
           <div className="space-y-1">
-            <Label>{locale === "zh" ? "电话" : "Phone"}</Label>
-            <Input value={form.phone} onChange={(e) => setForm((old) => ({ ...old, phone: e.target.value }))} />
+            <Label className="text-[11px] font-semibold uppercase tracking-[0.15em]">{locale === "zh" ? "意向车型" : "Interested Product"}</Label>
+            <select
+              className="h-10 w-full rounded-sm border border-input bg-white px-3"
+              value={form.productId}
+              onChange={(e) => setForm((old) => ({ ...old, productId: e.target.value }))}
+            >
+              <option value="">{locale === "zh" ? "通用询盘（未指定车型）" : "General Inquiry (No Model Selected)"}</option>
+              {products.map((product) => (
+                <option value={product.id} key={product.id}>
+                  {product.name}
+                </option>
+              ))}
+            </select>
           </div>
+
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            <div className="space-y-1">
+              <Label className="text-[11px] font-semibold uppercase tracking-[0.15em]">{locale === "zh" ? "姓名" : "Full Name"}</Label>
+              <Input required value={form.fullName} onChange={(e) => setForm((old) => ({ ...old, fullName: e.target.value }))} />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-[11px] font-semibold uppercase tracking-[0.15em]">Email</Label>
+              <Input type="email" required value={form.email} onChange={(e) => setForm((old) => ({ ...old, email: e.target.value }))} />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            <div className="space-y-1">
+              <Label className="text-[11px] font-semibold uppercase tracking-[0.15em]">{locale === "zh" ? "电话" : "Phone"}</Label>
+              <Input value={form.phone} onChange={(e) => setForm((old) => ({ ...old, phone: e.target.value }))} />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-[11px] font-semibold uppercase tracking-[0.15em]">{locale === "zh" ? "国家" : "Country"}</Label>
+              <Input value={form.country} onChange={(e) => setForm((old) => ({ ...old, country: e.target.value }))} />
+            </div>
+          </div>
+
           <div className="space-y-1">
-            <Label>{locale === "zh" ? "国家" : "Country"}</Label>
-            <Input value={form.country} onChange={(e) => setForm((old) => ({ ...old, country: e.target.value }))} />
+            <Label className="text-[11px] font-semibold uppercase tracking-[0.15em]">{locale === "zh" ? "留言" : "Message"}</Label>
+            <textarea
+              rows={4}
+              className="w-full rounded-sm border border-input px-3 py-2 text-sm"
+              value={form.detail}
+              onChange={(e) => setForm((old) => ({ ...old, detail: e.target.value }))}
+              placeholder={selectedProduct ? selectedProduct.name : ""}
+            />
           </div>
-        </div>
 
-        <div className="space-y-1">
-          <Label>{locale === "zh" ? "留言" : "Message"}</Label>
-          <textarea
-            rows={4}
-            className="w-full rounded border px-3 py-2 text-sm"
-            value={form.detail}
-            onChange={(e) => setForm((old) => ({ ...old, detail: e.target.value }))}
-            placeholder={selectedProduct ? selectedProduct.name : ""}
-          />
-        </div>
+          {error ? <p className="text-sm text-destructive">{error}</p> : null}
+          {message ? <p className="text-sm text-emerald-600">{message}</p> : null}
 
-        {error && <p className="text-sm text-destructive">{error}</p>}
-        {message && <p className="text-sm text-green-600">{message}</p>}
-
-        <Button disabled={submitting}>{submitting ? (locale === "zh" ? "提交中..." : "Submitting...") : (locale === "zh" ? "提交询盘" : "Submit Inquiry")}</Button>
-      </form>
+          <Button className="h-11 rounded-sm text-xs font-semibold uppercase tracking-[0.16em]" disabled={submitting}>
+            {submitting ? (locale === "zh" ? "提交中..." : "Submitting...") : (locale === "zh" ? "提交询盘" : "Submit Inquiry")}
+          </Button>
+        </form>
+      </section>
     </div>
   );
 }

@@ -17,36 +17,41 @@ export default function ArticlesPage() {
   const { articles, isLoading } = useArticles({ lang: locale, pageSize: 50 });
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="mb-2 text-3xl font-bold">{t(locale, "nav_articles")}</h1>
-      <p className="mb-6 text-muted-foreground">
-        {articles.length} {t(locale, "common_items")}
-      </p>
-
-      {isLoading ? (
-        <p className="text-muted-foreground">{t(locale, "loading")}</p>
-      ) : articles.length === 0 ? (
-        <p className="text-muted-foreground">{t(locale, "empty_articles")}</p>
-      ) : (
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-          {articles.map((article) => (
-            <Link key={article.id} href={withLang(`/articles/${article.slug}`, locale)} className="overflow-hidden rounded border hover:bg-muted/30">
-              <div className="relative aspect-video bg-muted">
-                {article.coverImage ? (
-                  <Image src={article.coverImage} alt={article.title} fill className="object-cover" />
-                ) : null}
-              </div>
-              <div className="space-y-2 p-4">
-                <h3 className="line-clamp-2 font-semibold">{article.title}</h3>
-                <p className="line-clamp-3 text-sm text-muted-foreground">{article.excerpt}</p>
-                <p className="text-xs text-muted-foreground">
-                  {formatDate(article.publishedAt || article.createdAt, locale === "zh" ? "zh-CN" : "en-US")}
-                </p>
-              </div>
-            </Link>
-          ))}
+    <div className="bg-slate-50 pb-16">
+      <section className="bg-slate-950 py-16 text-white">
+        <div className="section-shell">
+          <div className="tire-line mb-4" />
+          <h1 className="text-5xl font-bold uppercase tracking-tight">{t(locale, "nav_articles")}</h1>
+          <p className="mt-4 text-sm uppercase tracking-[0.2em] text-slate-300">
+            {articles.length} {t(locale, "common_items")}
+          </p>
         </div>
-      )}
+      </section>
+
+      <section className="section-shell mt-8">
+        {isLoading ? (
+          <p className="text-slate-500">{t(locale, "loading")}</p>
+        ) : articles.length === 0 ? (
+          <p className="text-slate-500">{t(locale, "empty_articles")}</p>
+        ) : (
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+            {articles.map((article) => (
+              <Link key={article.id} href={withLang(`/articles/${article.slug}`, locale)} className="industrial-panel overflow-hidden transition hover:-translate-y-1">
+                <div className="relative aspect-video bg-slate-200">
+                  {article.coverImage ? <Image src={article.coverImage} alt={article.title} fill className="object-cover" /> : null}
+                </div>
+                <div className="space-y-3 p-5">
+                  <h3 className="line-clamp-2 text-2xl font-semibold uppercase tracking-tight">{article.title}</h3>
+                  <p className="line-clamp-3 text-sm leading-7 text-slate-500">{article.excerpt}</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+                    {formatDate(article.publishedAt || article.createdAt, locale === "zh" ? "zh-CN" : "en-US")}
+                  </p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   );
 }

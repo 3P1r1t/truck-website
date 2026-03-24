@@ -14,16 +14,16 @@ export function ProductGallery({ images }: { images: ProductImage[] }) {
   const [index, setIndex] = useState(0);
 
   if (sorted.length === 0) {
-    return <div className="flex aspect-[4/3] items-center justify-center rounded border bg-muted text-muted-foreground">No image</div>;
+    return <div className="industrial-panel flex aspect-[4/3] items-center justify-center text-muted-foreground">No image</div>;
   }
 
   const current = sorted[index];
 
   return (
     <div className="space-y-3">
-      <div className="relative aspect-[4/3] overflow-hidden rounded border bg-muted">
+      <div className="relative aspect-[4/3] overflow-hidden rounded-sm border border-slate-200 bg-muted">
         <Image src={current.url} alt={current.altText || "image"} fill className="object-cover" sizes="(max-width: 768px) 100vw, 50vw" />
-        {sorted.length > 1 && (
+        {sorted.length > 1 ? (
           <>
             <Button
               size="icon"
@@ -42,17 +42,21 @@ export function ProductGallery({ images }: { images: ProductImage[] }) {
               <ChevronRight className="h-4 w-4" />
             </Button>
           </>
-        )}
+        ) : null}
       </div>
-      {sorted.length > 1 && (
+      {sorted.length > 1 ? (
         <div className="grid grid-cols-5 gap-2">
           {sorted.map((item, i) => (
-            <button key={item.id} onClick={() => setIndex(i)} className={`relative aspect-square overflow-hidden rounded border ${i === index ? "ring-2 ring-primary" : ""}`}>
+            <button
+              key={item.id}
+              onClick={() => setIndex(i)}
+              className={`relative aspect-square overflow-hidden rounded-sm border ${i === index ? "ring-2 ring-primary" : ""}`}
+            >
               <Image src={item.url} alt={item.altText || "thumb"} fill className="object-cover" sizes="96px" />
             </button>
           ))}
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

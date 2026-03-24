@@ -1,10 +1,11 @@
-export const dynamic = "force-dynamic";
+﻿export const dynamic = "force-dynamic";
 
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { inquiryStatusSchema } from "@/lib/validation";
 import { fail, ok } from "@/lib/utils";
 import { requireAdmin } from "@/lib/admin-auth";
+import { decodeInquiryIntentNotes, encodeInquiryIntentNotes } from "@/lib/inquiry-source";
 
 type InquiryStatus = "PENDING" | "FOLLOWING" | "WAITING_REPLY" | "INTERESTED" | "CONVERTED" | "ABANDONED";
 
@@ -74,12 +75,16 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       });
     }
 
+    const sourceType = decodeInquiryIntentNotes(existing.intentNotes).sourceType || "PRODUCT";
+
     const updated = await prisma.inquiry.update({
       where: { id: params.id },
       data: {
         status: toStatus,
         ...(parsed.data.tag !== undefined ? { tag: parsed.data.tag } : {}),
-        ...(parsed.data.intentNotes !== undefined ? { intentNotes: parsed.data.intentNotes || null } : {}),
+        ...(parsed.data.intentNotes !== undefined
+          ? { intentNotes: encodeInquiryIntentNotes(parsed.data.intentNotes || null, sourceType) }
+          : {}),
         ...(nextFollowUpAt !== undefined ? { nextFollowUpAt } : {}),
         ...(parsed.data.abandonReason !== undefined
           ? { abandonReason: parsed.data.abandonReason || null }
@@ -105,8 +110,12 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       },
     });
 
+    const decoded = decodeInquiryIntentNotes(updated.intentNotes);
+
     return ok({
       ...updated,
+      sourceType: decoded.sourceType || sourceType,
+      intentNotes: decoded.intentNotes || null,
       followUpLogs: getFollowUpLogs(updated.followUpLogs),
     });
   } catch (error) {

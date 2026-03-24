@@ -29,7 +29,7 @@ export function WhatsAppFloat() {
       href={link}
       target="_blank"
       rel="noreferrer"
-      className="fixed bottom-5 right-5 z-50 inline-flex items-center gap-2 rounded-full bg-green-600 px-4 py-2 text-sm font-semibold text-white shadow-lg transition hover:bg-green-700"
+      className="fixed bottom-5 right-5 z-50 inline-flex items-center gap-2 rounded-full border border-green-300 bg-green-600 px-4 py-2 text-xs font-semibold uppercase tracking-[0.15em] text-white shadow-[0_18px_28px_-16px_rgba(22,163,74,0.9)] transition hover:bg-green-700"
       aria-label={t(locale, "contact_start_whatsapp")}
       title={t(locale, "contact_start_whatsapp")}
     >

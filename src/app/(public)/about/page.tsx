@@ -13,7 +13,7 @@ export default function AboutPage() {
     settings,
     "about_intro",
     locale,
-    "Tengyu International Truck Factory specializes in remanufacturing a wide range of commercial vehicles and trailers, including dump trucks, tractor trucks, and tankers. We provide high-performance and durable customized solutions for construction, transportation, and engineering projects."
+    "Tengyu International Truck Factory specializes in remanufacturing commercial vehicles and trailers for engineering and logistics scenarios."
   );
   const aboutImage = settings.about_image_url || "";
 
@@ -54,31 +54,41 @@ export default function AboutPage() {
   ];
 
   return (
-    <div className="container mx-auto max-w-5xl px-4 py-8">
-      <h1 className="mb-3 text-3xl font-bold">{locale === "zh" ? "关于我们" : "About Us"}</h1>
-
-      <div className="mb-10 overflow-hidden rounded border">
-        <div className="grid grid-cols-1 gap-4 p-5 md:grid-cols-2 md:items-center">
-          <div>
-            <h2 className="text-xl font-semibold">{locale === "zh" ? "公司介绍" : "Company Profile"}</h2>
-            <p className="mt-2 text-muted-foreground">{intro}</p>
-          </div>
-          {aboutImage ? (
-            <div className="relative h-56 overflow-hidden rounded border bg-muted md:h-64">
-              <Image src={aboutImage} alt={locale === "zh" ? "关于我们图片" : "About image"} fill className="object-cover" />
-            </div>
-          ) : null}
+    <div className="bg-slate-50 pb-16">
+      <section className="bg-slate-950 py-16 text-white">
+        <div className="section-shell">
+          <div className="tire-line mb-4" />
+          <h1 className="text-5xl font-bold uppercase tracking-tight">{locale === "zh" ? "关于我们" : "About Us"}</h1>
+          <p className="mt-5 max-w-4xl text-slate-300">{intro}</p>
         </div>
-      </div>
+      </section>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-        {cards.map((item) => (
-          <div key={item.title} className="rounded border p-5">
-            <h2 className="text-lg font-semibold">{item.title}</h2>
-            <p className="mt-2 text-sm text-muted-foreground">{item.body}</p>
+      <section className="section-shell -mt-8">
+        <div className="industrial-panel overflow-hidden">
+          <div className="grid grid-cols-1 gap-6 p-6 md:grid-cols-2 md:items-center md:p-8">
+            <div>
+              <p className="industrial-kicker">{locale === "zh" ? "企业介绍" : "Company Profile"}</p>
+              <h2 className="mt-2 text-4xl font-bold uppercase tracking-tight">
+                {locale === "zh" ? "腾宇商用车再制造" : "Tengyu Remanufacturing System"}
+              </h2>
+            </div>
+            {aboutImage ? (
+              <div className="relative h-56 overflow-hidden rounded-sm border border-slate-200 bg-slate-200 md:h-72">
+                <Image src={aboutImage} alt={locale === "zh" ? "关于我们图片" : "About image"} fill className="object-cover" />
+              </div>
+            ) : null}
           </div>
+        </div>
+      </section>
+
+      <section className="section-shell mt-8 grid grid-cols-1 gap-6 md:grid-cols-3">
+        {cards.map((item) => (
+          <article key={item.title} className="industrial-panel p-6">
+            <h3 className="text-2xl font-semibold uppercase tracking-tight">{item.title}</h3>
+            <p className="mt-3 text-sm leading-7 text-slate-500">{item.body}</p>
+          </article>
         ))}
-      </div>
+      </section>
     </div>
   );
 }

@@ -15,30 +15,38 @@ export default function ArticleDetailPage() {
   const { article, isLoading } = useArticle(slug, locale);
 
   if (isLoading) {
-    return <div className="container mx-auto px-4 py-8">{t(locale, "loading")}</div>;
+    return <div className="section-shell py-10">{t(locale, "loading")}</div>;
   }
 
   if (!article) {
-    return <div className="container mx-auto px-4 py-8">{t(locale, "not_found")}</div>;
+    return <div className="section-shell py-10">{t(locale, "not_found")}</div>;
   }
 
   return (
-    <div className="container mx-auto max-w-4xl px-4 py-8">
-      <h1 className="text-3xl font-bold">{article.title}</h1>
-      <p className="mt-2 text-sm text-muted-foreground">
-        {formatDate(article.publishedAt || article.createdAt, locale === "zh" ? "zh-CN" : "en-US")} · {article.viewCount} {t(locale, "article_reads")}
-      </p>
+    <div className="bg-slate-50 py-10">
+      <article className="section-shell">
+        <div className="industrial-panel overflow-hidden">
+          <div className="p-6 md:p-8">
+            <h1 className="text-4xl font-bold uppercase tracking-tight">{article.title}</h1>
+            <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+              {formatDate(article.publishedAt || article.createdAt, locale === "zh" ? "zh-CN" : "en-US")} · {article.viewCount} {t(locale, "article_reads")}
+            </p>
+          </div>
 
-      {article.coverImage ? (
-        <div className="relative mt-6 aspect-video overflow-hidden rounded border bg-muted">
-          <Image src={article.coverImage} alt={article.title} fill className="object-cover" />
+          {article.coverImage ? (
+            <div className="relative aspect-video border-y border-slate-100 bg-slate-200">
+              <Image src={article.coverImage} alt={article.title} fill className="object-cover" />
+            </div>
+          ) : null}
+
+          <div className="p-6 md:p-8">
+            <div
+              className="article-content space-y-4 text-sm leading-7 text-slate-600"
+              dangerouslySetInnerHTML={{ __html: renderArticleContent(article.content) }}
+            />
+          </div>
         </div>
-      ) : null}
-
-      <article
-        className="article-content mt-8 space-y-4 leading-7 text-muted-foreground"
-        dangerouslySetInnerHTML={{ __html: renderArticleContent(article.content) }}
-      />
+      </article>
     </div>
   );
 }

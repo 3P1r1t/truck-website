@@ -17,6 +17,31 @@ const REQUIRED_SETTINGS: SettingItem[] = [
     description: "Image used in About intro section",
   },
   {
+    key: "home_hero_image_url",
+    value: "",
+    type: "image",
+    group: "home",
+    label: "Home Hero Image URL",
+    labelZh: "首页主视觉图片",
+    description: "Hero background image on homepage",
+  },
+  {
+    key: "header_top_notice_en",
+    value: "TENGYU GLOBAL: OPERATING IN 50+ COUNTRIES",
+    type: "text",
+    group: "site",
+    label: "Header Top Notice (EN)",
+    labelZh: "顶部公告(英文)",
+  },
+  {
+    key: "header_top_notice_zh",
+    value: "TENGYU GLOBAL: 服务覆盖 50+ 国家与地区",
+    type: "text",
+    group: "site",
+    label: "Header Top Notice (ZH)",
+    labelZh: "顶部公告(中文)",
+  },
+  {
     key: "whatsapp_number",
     value: "",
     type: "text",
@@ -317,3 +342,5 @@ export default function AdminSettingsPage() {
     </div>
   );
 }
+
+
