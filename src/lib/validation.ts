@@ -50,7 +50,7 @@ export const productCreateSchema = z.object({
   shortDescriptionZh: z.string().optional().nullable(),
   basePrice: z.number().positive(),
   maxPrice: z.number().positive().optional().nullable(),
-  currency: z.string().optional(),
+  currency: z.enum(["RMB", "USD", "EUR"]).optional(),
   fuelType: z.string().optional().nullable(),
   enginePower: z.number().int().optional().nullable(),
   wheelbase: z.number().int().optional().nullable(),

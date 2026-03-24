@@ -7,6 +7,7 @@ import type {
   Article,
   Brand,
   Category,
+  DriveTypeOption,
   FuelTypeOption,
   Inquiry,
   Product,
@@ -161,6 +162,17 @@ export function useFuelTypes(lang?: string) {
   const { data, error, isLoading } = useSWR(key, fetcher<FuelTypeOption[]>);
   return {
     fuelTypes: data || [],
+    isLoading,
+    isError: error,
+    mutate: () => mutate(key),
+  };
+}
+
+export function useDriveTypes(lang?: string) {
+  const key = withLang("/drive-types", lang);
+  const { data, error, isLoading } = useSWR(key, fetcher<DriveTypeOption[]>);
+  return {
+    driveTypes: data || [],
     isLoading,
     isError: error,
     mutate: () => mutate(key),
@@ -502,6 +514,37 @@ export async function updateFuelType(id: string, payload: { name?: string; nameZ
 export async function deleteFuelType(id: string) {
   await request(`/fuel-types/${id}`, { method: "DELETE" }, true);
   await mutate((key) => typeof key === "string" && key.startsWith("/fuel-types"));
+}
+
+export async function createDriveType(payload: { name: string; nameZh?: string; slug?: string }) {
+  const { data } = await request<DriveTypeOption>(
+    "/drive-types",
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+    true
+  );
+  await mutate((key) => typeof key === "string" && key.startsWith("/drive-types"));
+  return data;
+}
+
+export async function updateDriveType(id: string, payload: { name?: string; nameZh?: string; slug?: string }) {
+  const { data } = await request<DriveTypeOption>(
+    `/drive-types/${id}`,
+    {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    },
+    true
+  );
+  await mutate((key) => typeof key === "string" && key.startsWith("/drive-types"));
+  return data;
+}
+
+export async function deleteDriveType(id: string) {
+  await request(`/drive-types/${id}`, { method: "DELETE" }, true);
+  await mutate((key) => typeof key === "string" && key.startsWith("/drive-types"));
 }
 
 export async function createArticle(payload: Record<string, unknown>) {

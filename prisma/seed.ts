@@ -1,5 +1,5 @@
-import { PrismaClient } from "@prisma/client";
-import bcrypt from "bcryptjs";
+﻿import { PrismaClient } from "@prisma/client";
+import * as bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
@@ -38,129 +38,26 @@ async function upsertSettings(settings: SettingSeed[]) {
   }
 }
 
-async function main() {
-  const passwordHash = await bcrypt.hash("admin123", 10);
-
-  await prisma.admin.upsert({
-    where: { username: "admin" },
-    create: {
-      username: "admin",
-      email: "admin@example.com",
-      passwordHash,
-      role: "SUPER_ADMIN",
-      isActive: true,
-    },
-    update: {
-      email: "admin@example.com",
-      passwordHash,
-      role: "SUPER_ADMIN",
-      isActive: true,
-    },
-  });
-
-  const volvo = await prisma.brand.upsert({
-    where: { slug: "volvo" },
-    create: {
-      name: "Volvo",
-      nameZh: "沃尔沃",
-      slug: "volvo",
-      description: "Swedish commercial vehicle manufacturer",
-      descriptionZh: "瑞典商用车制造商",
-      isActive: true,
-      sortOrder: 1,
-    },
-    update: {
-      name: "Volvo",
-      nameZh: "沃尔沃",
-      description: "Swedish commercial vehicle manufacturer",
-      descriptionZh: "瑞典商用车制造商",
-      isActive: true,
-      sortOrder: 1,
-    },
-  });
-
-  const scania = await prisma.brand.upsert({
-    where: { slug: "scania" },
-    create: {
-      name: "Scania",
-      nameZh: "斯堪尼亚",
-      slug: "scania",
-      description: "Global heavy truck manufacturer",
-      descriptionZh: "全球重卡制造商",
-      isActive: true,
-      sortOrder: 2,
-    },
-    update: {
-      name: "Scania",
-      nameZh: "斯堪尼亚",
-      description: "Global heavy truck manufacturer",
-      descriptionZh: "全球重卡制造商",
-      isActive: true,
-      sortOrder: 2,
-    },
-  });
-
-  const lightTruck = await prisma.category.upsert({
-    where: { slug: "light-trucks" },
-    create: {
-      name: "Light Trucks",
-      nameZh: "轻型卡车",
-      slug: "light-trucks",
-      description: "Urban and short-haul transport trucks",
-      descriptionZh: "适用于城市和短途运输的轻卡",
-      isActive: true,
-      sortOrder: 1,
-    },
-    update: {
-      name: "Light Trucks",
-      nameZh: "轻型卡车",
-      description: "Urban and short-haul transport trucks",
-      descriptionZh: "适用于城市和短途运输的轻卡",
-      isActive: true,
-      sortOrder: 1,
-    },
-  });
-
-  const heavyTruck = await prisma.category.upsert({
-    where: { slug: "heavy-trucks" },
-    create: {
-      name: "Heavy Trucks",
-      nameZh: "重型卡车",
-      slug: "heavy-trucks",
-      description: "Long-haul and high-load transport trucks",
-      descriptionZh: "适用于长途和重载运输的重卡",
-      isActive: true,
-      sortOrder: 2,
-    },
-    update: {
-      name: "Heavy Trucks",
-      nameZh: "重型卡车",
-      description: "Long-haul and high-load transport trucks",
-      descriptionZh: "适用于长途和重载运输的重卡",
-      isActive: true,
-      sortOrder: 2,
-    },
-  });
-
+async function upsertSampleProducts(brandIds: { volvoId: string; scaniaId: string }, categoryIds: { lightId: string; heavyId: string }) {
   const productA = await prisma.product.upsert({
     where: { slug: "volvo-fl-280" },
     create: {
-      brandId: volvo.id,
-      categoryId: lightTruck.id,
+      brandId: brandIds.volvoId,
+      categoryId: categoryIds.lightId,
       name: "Volvo FL 280",
-      nameZh: "沃尔沃 FL 280",
+      nameZh: "Volvo FL 280",
       slug: "volvo-fl-280",
       description: "Compact truck ideal for city distribution and logistics.",
-      descriptionZh: "适用于城市配送和物流运输的紧凑型卡车。",
+      descriptionZh: "Compact truck ideal for city distribution and logistics.",
       shortDescription: "Compact truck for urban logistics.",
-      shortDescriptionZh: "城市物流紧凑型卡车。",
+      shortDescriptionZh: "Compact truck for urban logistics.",
       basePrice: 35000,
-      maxPrice: 35000,
+      maxPrice: 42000,
       currency: "USD",
       fuelType: "fuel_type_diesel",
       enginePower: 280,
       wheelbase: 3150,
-      driveType: "4x2",
+      driveType: "drive_type_4x2",
       cargoLengthMm: 5000,
       cargoVolumeCubicM: 12.5,
       emissionStandard: "EURO-6",
@@ -169,21 +66,21 @@ async function main() {
       sortOrder: 1,
     },
     update: {
-      brandId: volvo.id,
-      categoryId: lightTruck.id,
+      brandId: brandIds.volvoId,
+      categoryId: categoryIds.lightId,
       name: "Volvo FL 280",
-      nameZh: "沃尔沃 FL 280",
+      nameZh: "Volvo FL 280",
       description: "Compact truck ideal for city distribution and logistics.",
-      descriptionZh: "适用于城市配送和物流运输的紧凑型卡车。",
+      descriptionZh: "Compact truck ideal for city distribution and logistics.",
       shortDescription: "Compact truck for urban logistics.",
-      shortDescriptionZh: "城市物流紧凑型卡车。",
+      shortDescriptionZh: "Compact truck for urban logistics.",
       basePrice: 35000,
-      maxPrice: 35000,
+      maxPrice: 42000,
       currency: "USD",
       fuelType: "fuel_type_diesel",
       enginePower: 280,
       wheelbase: 3150,
-      driveType: "4x2",
+      driveType: "drive_type_4x2",
       cargoLengthMm: 5000,
       cargoVolumeCubicM: 12.5,
       emissionStandard: "EURO-6",
@@ -196,22 +93,22 @@ async function main() {
   const productB = await prisma.product.upsert({
     where: { slug: "scania-r-520" },
     create: {
-      brandId: scania.id,
-      categoryId: heavyTruck.id,
+      brandId: brandIds.scaniaId,
+      categoryId: categoryIds.heavyId,
       name: "Scania R 520",
-      nameZh: "斯堪尼亚 R 520",
+      nameZh: "Scania R 520",
       slug: "scania-r-520",
       description: "Long-haul heavy truck with high torque and comfort cabin.",
-      descriptionZh: "高扭矩长途重卡，兼顾动力与驾乘舒适。",
+      descriptionZh: "Long-haul heavy truck with high torque and comfort cabin.",
       shortDescription: "High-power long-haul heavy truck.",
-      shortDescriptionZh: "高功率长途运输重卡。",
+      shortDescriptionZh: "High-power long-haul heavy truck.",
       basePrice: 95000,
-      maxPrice: 95000,
+      maxPrice: 120000,
       currency: "USD",
       fuelType: "fuel_type_diesel",
       enginePower: 520,
       wheelbase: 3700,
-      driveType: "6x4",
+      driveType: "drive_type_6x4",
       cargoLengthMm: 8000,
       cargoVolumeCubicM: 25,
       emissionStandard: "EURO-5",
@@ -220,21 +117,21 @@ async function main() {
       sortOrder: 2,
     },
     update: {
-      brandId: scania.id,
-      categoryId: heavyTruck.id,
+      brandId: brandIds.scaniaId,
+      categoryId: categoryIds.heavyId,
       name: "Scania R 520",
-      nameZh: "斯堪尼亚 R 520",
+      nameZh: "Scania R 520",
       description: "Long-haul heavy truck with high torque and comfort cabin.",
-      descriptionZh: "高扭矩长途重卡，兼顾动力与驾乘舒适。",
+      descriptionZh: "Long-haul heavy truck with high torque and comfort cabin.",
       shortDescription: "High-power long-haul heavy truck.",
-      shortDescriptionZh: "高功率长途运输重卡。",
+      shortDescriptionZh: "High-power long-haul heavy truck.",
       basePrice: 95000,
-      maxPrice: 95000,
+      maxPrice: 120000,
       currency: "USD",
       fuelType: "fuel_type_diesel",
       enginePower: 520,
       wheelbase: 3700,
-      driveType: "6x4",
+      driveType: "drive_type_6x4",
       cargoLengthMm: 8000,
       cargoVolumeCubicM: 25,
       emissionStandard: "EURO-5",
@@ -282,10 +179,121 @@ async function main() {
         imageUrl: image.imageUrl,
       },
     });
+
     if (!existing) {
       await prisma.productImage.create({ data: image });
     }
   }
+}
+
+async function main() {
+  const passwordHash = await bcrypt.hash("admin123", 10);
+
+  await prisma.admin.upsert({
+    where: { username: "admin" },
+    create: {
+      username: "admin",
+      email: "admin@example.com",
+      passwordHash,
+      role: "SUPER_ADMIN",
+      isActive: true,
+    },
+    update: {
+      email: "admin@example.com",
+      passwordHash,
+      role: "SUPER_ADMIN",
+      isActive: true,
+    },
+  });
+
+  const volvo = await prisma.brand.upsert({
+    where: { slug: "volvo" },
+    create: {
+      name: "Volvo",
+      nameZh: "Volvo",
+      slug: "volvo",
+      description: "Swedish commercial vehicle manufacturer",
+      descriptionZh: "Swedish commercial vehicle manufacturer",
+      isActive: true,
+      sortOrder: 1,
+    },
+    update: {
+      name: "Volvo",
+      nameZh: "Volvo",
+      description: "Swedish commercial vehicle manufacturer",
+      descriptionZh: "Swedish commercial vehicle manufacturer",
+      isActive: true,
+      sortOrder: 1,
+    },
+  });
+
+  const scania = await prisma.brand.upsert({
+    where: { slug: "scania" },
+    create: {
+      name: "Scania",
+      nameZh: "Scania",
+      slug: "scania",
+      description: "Global heavy truck manufacturer",
+      descriptionZh: "Global heavy truck manufacturer",
+      isActive: true,
+      sortOrder: 2,
+    },
+    update: {
+      name: "Scania",
+      nameZh: "Scania",
+      description: "Global heavy truck manufacturer",
+      descriptionZh: "Global heavy truck manufacturer",
+      isActive: true,
+      sortOrder: 2,
+    },
+  });
+
+  const lightTruck = await prisma.category.upsert({
+    where: { slug: "light-trucks" },
+    create: {
+      name: "Light Trucks",
+      nameZh: "Light Trucks",
+      slug: "light-trucks",
+      description: "Urban and short-haul transport trucks",
+      descriptionZh: "Urban and short-haul transport trucks",
+      isActive: true,
+      sortOrder: 1,
+    },
+    update: {
+      name: "Light Trucks",
+      nameZh: "Light Trucks",
+      description: "Urban and short-haul transport trucks",
+      descriptionZh: "Urban and short-haul transport trucks",
+      isActive: true,
+      sortOrder: 1,
+    },
+  });
+
+  const heavyTruck = await prisma.category.upsert({
+    where: { slug: "heavy-trucks" },
+    create: {
+      name: "Heavy Trucks",
+      nameZh: "Heavy Trucks",
+      slug: "heavy-trucks",
+      description: "Long-haul and high-load transport trucks",
+      descriptionZh: "Long-haul and high-load transport trucks",
+      isActive: true,
+      sortOrder: 2,
+    },
+    update: {
+      name: "Heavy Trucks",
+      nameZh: "Heavy Trucks",
+      description: "Long-haul and high-load transport trucks",
+      descriptionZh: "Long-haul and high-load transport trucks",
+      isActive: true,
+      sortOrder: 2,
+    },
+  });
+
+  await upsertSampleProducts(
+    { volvoId: volvo.id, scaniaId: scania.id },
+    { lightId: lightTruck.id, heavyId: heavyTruck.id }
+  );
 
   await upsertSettings([
     {
@@ -293,119 +301,119 @@ async function main() {
       value: "en",
       group: "i18n",
       label: "Default Language",
-      labelZh: "默认语言",
+      labelZh: "Default Language",
     },
     {
       key: "site_title_en",
       value: "Global Commercial Vehicles",
       group: "site",
       label: "Site Title (EN)",
-      labelZh: "网站标题(英文)",
+      labelZh: "Site Title (EN)",
     },
     {
       key: "site_title_zh",
-      value: "全球商用车平台",
+      value: "Global Commercial Vehicles",
       group: "site",
       label: "Site Title (ZH)",
-      labelZh: "网站标题(中文)",
+      labelZh: "Site Title (ZH)",
     },
     {
       key: "header_title_en",
       value: "Global Commercial Vehicles",
       group: "site",
       label: "Header Title (EN)",
-      labelZh: "页头标题(英文)",
+      labelZh: "Header Title (EN)",
     },
     {
       key: "header_title_zh",
-      value: "全球商用车平台",
+      value: "Global Commercial Vehicles",
       group: "site",
       label: "Header Title (ZH)",
-      labelZh: "页头标题(中文)",
+      labelZh: "Header Title (ZH)",
     },
     {
       key: "footer_copyright_text_en",
       value: "Global Commercial Vehicles. All rights reserved.",
       group: "site",
       label: "Footer Copyright (EN)",
-      labelZh: "页脚版权(英文)",
+      labelZh: "Footer Copyright (EN)",
     },
     {
       key: "footer_copyright_text_zh",
-      value: "全球商用车平台 版权所有。",
+      value: "Global Commercial Vehicles. All rights reserved.",
       group: "site",
       label: "Footer Copyright (ZH)",
-      labelZh: "页脚版权(中文)",
+      labelZh: "Footer Copyright (ZH)",
     },
     {
       key: "support_email",
       value: "support@globaltrucks.com",
       group: "contact",
       label: "Support Email",
-      labelZh: "支持邮箱",
+      labelZh: "Support Email",
     },
     {
       key: "support_phone",
       value: "+1-800-TRUCKS",
       group: "contact",
       label: "Support Phone",
-      labelZh: "支持电话",
+      labelZh: "Support Phone",
     },
     {
       key: "contact_address_en",
       value: "No. 123 Logistics Avenue, Beijing",
       group: "contact",
       label: "Contact Address (EN)",
-      labelZh: "联系地址(英文)",
+      labelZh: "Contact Address (EN)",
     },
     {
       key: "contact_address_zh",
-      value: "北京市物流大道 123 号",
+      value: "No. 123 Logistics Avenue, Beijing",
       group: "contact",
       label: "Contact Address (ZH)",
-      labelZh: "联系地址(中文)",
+      labelZh: "Contact Address (ZH)",
     },
     {
       key: "home_hero_title_en",
       value: "Professional Commercial Vehicle Solutions",
       group: "home",
       label: "Home Hero Title (EN)",
-      labelZh: "首页主标题(英文)",
+      labelZh: "Home Hero Title (EN)",
     },
     {
       key: "home_hero_title_zh",
-      value: "专业商用车解决方案",
+      value: "Professional Commercial Vehicle Solutions",
       group: "home",
       label: "Home Hero Title (ZH)",
-      labelZh: "首页主标题(中文)",
+      labelZh: "Home Hero Title (ZH)",
     },
     {
       key: "home_hero_subtitle_en",
       value: "Find global trucks and get efficient inquiry support.",
       group: "home",
       label: "Home Hero Subtitle (EN)",
-      labelZh: "首页副标题(英文)",
+      labelZh: "Home Hero Subtitle (EN)",
     },
     {
       key: "home_hero_subtitle_zh",
-      value: "聚合全球卡车车型，快速获取询盘支持。",
+      value: "Find global trucks and get efficient inquiry support.",
       group: "home",
       label: "Home Hero Subtitle (ZH)",
-      labelZh: "首页副标题(中文)",
+      labelZh: "Home Hero Subtitle (ZH)",
     },
     {
       key: "about_intro_en",
       value: "We provide integrated procurement and support for commercial fleets.",
       group: "about",
       label: "About Intro (EN)",
-      labelZh: "关于介绍(英文)",
+      labelZh: "About Intro (EN)",
     },
     {
       key: "about_intro_zh",
-      value: "我们为商用车车队提供一体化采购与服务支持。",
+      value: "We provide integrated procurement and support for commercial fleets.",
       group: "about",
       label: "About Intro (ZH)",
-      labelZh: "关于介绍(中文)",
+      labelZh: "About Intro (ZH)",
     },
     {
       key: "about_image_url",
@@ -413,7 +421,7 @@ async function main() {
       type: "image",
       group: "about",
       label: "About Image URL",
-      labelZh: "关于我们图片",
+      labelZh: "About Image URL",
     },
     {
       key: "fuel_type_diesel",
@@ -421,7 +429,7 @@ async function main() {
       type: "fuel_type",
       group: "fuel_types",
       label: "Diesel",
-      labelZh: "柴油",
+      labelZh: "Diesel",
     },
     {
       key: "fuel_type_lng",
@@ -429,7 +437,7 @@ async function main() {
       type: "fuel_type",
       group: "fuel_types",
       label: "LNG",
-      labelZh: "液化天然气",
+      labelZh: "LNG",
     },
     {
       key: "fuel_type_electric",
@@ -437,7 +445,31 @@ async function main() {
       type: "fuel_type",
       group: "fuel_types",
       label: "Electric",
-      labelZh: "纯电",
+      labelZh: "Electric",
+    },
+    {
+      key: "drive_type_4x2",
+      value: "4x2",
+      type: "drive_type",
+      group: "drive_types",
+      label: "4x2",
+      labelZh: "4x2",
+    },
+    {
+      key: "drive_type_6x4",
+      value: "6x4",
+      type: "drive_type",
+      group: "drive_types",
+      label: "6x4",
+      labelZh: "6x4",
+    },
+    {
+      key: "drive_type_8x4",
+      value: "8x4",
+      type: "drive_type",
+      group: "drive_types",
+      label: "8x4",
+      labelZh: "8x4",
     },
   ]);
 

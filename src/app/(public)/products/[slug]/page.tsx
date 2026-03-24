@@ -1,10 +1,10 @@
-"use client";
+﻿"use client";
 
 import { useMemo } from "react";
 import { useParams } from "next/navigation";
 import { ProductGallery } from "@/components/public/ProductGallery";
 import { InquiryForm } from "@/components/public/InquiryForm";
-import { useFuelTypes, useProduct } from "@/lib/api";
+import { useDriveTypes, useFuelTypes, useProduct } from "@/lib/api";
 import { formatPriceRange } from "@/lib/utils";
 import { useLocale } from "@/lib/use-locale";
 import { t } from "@/lib/site-dictionary";
@@ -15,6 +15,7 @@ export default function ProductDetailPage() {
   const slug = params.slug as string;
   const { product, isLoading } = useProduct(slug, locale);
   const { fuelTypes } = useFuelTypes(locale);
+  const { driveTypes } = useDriveTypes(locale);
 
   const fuelTypeMap = useMemo(() => {
     const map = new Map<string, string>();
@@ -25,6 +26,15 @@ export default function ProductDetailPage() {
     return map;
   }, [fuelTypes]);
 
+  const driveTypeMap = useMemo(() => {
+    const map = new Map<string, string>();
+    driveTypes.forEach((item) => {
+      map.set(item.key, item.name);
+      map.set(item.nameEn, item.name);
+    });
+    return map;
+  }, [driveTypes]);
+
   if (isLoading) {
     return <div className="container mx-auto px-4 py-8">{t(locale, "loading")}</div>;
   }
@@ -32,6 +42,26 @@ export default function ProductDetailPage() {
   if (!product) {
     return <div className="container mx-auto px-4 py-8">{t(locale, "not_found")}</div>;
   }
+
+  const specRows: Array<[string, string]> = [
+    [locale === "zh" ? "品牌" : "Brand", product.brand?.name || "-"],
+    [locale === "zh" ? "分类" : "Category", product.category?.name || "-"],
+    [
+      locale === "zh" ? "燃料类型" : "Fuel Type",
+      fuelTypeMap.get(product.fuelType || "") || product.fuelType || "-",
+    ],
+    [locale === "zh" ? "发动机功率" : "Engine Power", product.enginePower ? `${product.enginePower} hp` : "-"],
+    [locale === "zh" ? "轴距" : "Wheelbase", product.wheelbase ? `${product.wheelbase} mm` : "-"],
+    [
+      locale === "zh" ? "驱动形式" : "Drive",
+      driveTypeMap.get(product.driveType || "") || product.driveType || "-",
+    ],
+    [locale === "zh" ? "货箱长度" : "Cargo Length", product.cargoLengthMm ? `${product.cargoLengthMm} mm` : "-"],
+    [locale === "zh" ? "货箱容积" : "Cargo Volume", product.cargoVolumeCubicM ? `${product.cargoVolumeCubicM} m³` : "-"],
+    [locale === "zh" ? "电池容量" : "Battery", product.batteryCapacityKwh ? `${product.batteryCapacityKwh} kWh` : "-"],
+    [locale === "zh" ? "排放标准" : "Emission", product.emissionStandard || "-"],
+    [locale === "zh" ? "整备质量" : "Weight", product.weightKg ? `${product.weightKg} kg` : "-"],
+  ];
 
   return (
     <div className="container mx-auto space-y-8 px-4 py-8">
@@ -45,7 +75,12 @@ export default function ProductDetailPage() {
         <div className="space-y-6">
           <div>
             <p className="text-3xl font-bold text-primary">
-              {formatPriceRange(product.basePrice, product.maxPrice, product.currency, locale === "zh" ? "zh-CN" : "en-US")}
+              {formatPriceRange(
+                product.basePrice,
+                product.maxPrice,
+                product.currency,
+                locale === "zh" ? "zh-CN" : "en-US"
+              )}
             </p>
           </div>
 
@@ -56,19 +91,7 @@ export default function ProductDetailPage() {
       <section>
         <h2 className="mb-3 text-2xl font-semibold">{t(locale, "product_specs")}</h2>
         <div className="overflow-hidden rounded border">
-          {[
-            [locale === "zh" ? "品牌" : "Brand", product.brand?.name || "-"],
-            [locale === "zh" ? "分类" : "Category", product.category?.name || "-"],
-            [locale === "zh" ? "燃料类型" : "Fuel Type", fuelTypeMap.get(product.fuelType || "") || product.fuelType || "-"],
-            [locale === "zh" ? "发动机功率" : "Engine Power", product.enginePower ? `${product.enginePower} hp` : "-"],
-            [locale === "zh" ? "轴距" : "Wheelbase", product.wheelbase ? `${product.wheelbase} mm` : "-"],
-            [locale === "zh" ? "驱动形式" : "Drive", product.driveType || "-"],
-            [locale === "zh" ? "货箱长度" : "Cargo Length", product.cargoLengthMm ? `${product.cargoLengthMm} mm` : "-"],
-            [locale === "zh" ? "货箱容积" : "Cargo Volume", product.cargoVolumeCubicM ? `${product.cargoVolumeCubicM} m³` : "-"],
-            [locale === "zh" ? "电池容量" : "Battery", product.batteryCapacityKwh ? `${product.batteryCapacityKwh} kWh` : "-"],
-            [locale === "zh" ? "排放标准" : "Emission", product.emissionStandard || "-"],
-            [locale === "zh" ? "整备质量" : "Weight", product.weightKg ? `${product.weightKg} kg` : "-"],
-          ].map(([label, value]) => (
+          {specRows.map(([label, value]) => (
             <div key={label} className="grid grid-cols-2 border-b px-4 py-2 text-sm last:border-b-0">
               <span className="text-muted-foreground">{label}</span>
               <span>{value}</span>

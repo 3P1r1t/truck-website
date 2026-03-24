@@ -84,9 +84,10 @@ export function formatDate(date: string | Date, locale = "en-US") {
 
 export function formatPrice(value: number | string, currency = "USD", locale = "en-US") {
   const amount = typeof value === "string" ? Number(value) : value;
+  const normalizedCurrency = currency === "RMB" ? "CNY" : currency;
   return new Intl.NumberFormat(locale, {
     style: "currency",
-    currency,
+    currency: normalizedCurrency,
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
   }).format(amount);
@@ -108,6 +109,17 @@ export function formatPriceRange(
     maximumFractionDigits: 2,
   });
   const code = (currency || "USD").toUpperCase();
+  const symbolMap: Record<string, string> = {
+    RMB: "¥",
+    USD: "$",
+    EUR: "€",
+  };
+
+  if (symbolMap[code]) {
+    const symbol = symbolMap[code];
+    return `${symbol}${formatter.format(safeMin)}-${symbol}${formatter.format(resolvedMax)}`;
+  }
+
   return `${formatter.format(safeMin)}${code}-${formatter.format(resolvedMax)}${code}`;
 }
 
