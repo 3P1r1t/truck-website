@@ -1,6 +1,6 @@
 import { Locale, pickLocalized } from "@/lib/i18n";
 import { toNumber } from "@/lib/utils";
-import type { Product, Brand, Category, ProductImage, Article } from "@prisma/client";
+import type { Product, Brand, Category, ProductImage } from "@prisma/client";
 
 type ProductWithRelations = Product & {
   brand?: Brand | null;
@@ -88,30 +88,6 @@ export function mapProduct(product: ProductWithRelations, locale: Locale) {
     category: product.category ? mapCategory(product.category, locale) : null,
     images,
     imageUrls: images.map((image) => image.url),
-  };
-}
-
-export function mapArticle(article: Article, locale: Locale) {
-  return {
-    id: article.id,
-    slug: article.slug,
-    title: pickLocalized(article.title, article.titleZh, locale),
-    titleEn: article.title,
-    titleZh: article.titleZh,
-    excerpt: pickLocalized(article.excerpt, article.excerptZh, locale),
-    excerptEn: article.excerpt,
-    excerptZh: article.excerptZh,
-    content: pickLocalized(article.content, article.contentZh, locale),
-    contentEn: article.content,
-    contentZh: article.contentZh,
-    coverImage: article.coverImage,
-    categoryId: article.categoryId,
-    isActive: article.isActive,
-    viewCount: article.viewCount,
-    publishedAt: article.publishedAt,
-    createdAt: article.createdAt,
-    updatedAt: article.updatedAt,
-    authorId: article.authorId,
   };
 }
 

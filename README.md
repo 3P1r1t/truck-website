@@ -1,58 +1,77 @@
 ﻿# truck-merged-project
 
-Merged project based on:
-- `truck-website-main` for public frontend layout
-- `truck-websit-codex-rebulid` for implemented backend features
+单体 Next.js 站点（前台 C 端 + 后台 B 端），用于商用车展示与线索管理。
 
-## Final Architecture
-- Single Next.js monolith (`App Router`)
+## 技术栈
+
+- Next.js 14 (App Router)
+- React 18 + TypeScript
+- Tailwind CSS
 - Prisma + PostgreSQL
-- Admin auth via JWT (`/api/admin/auth/login`)
-- Public site is open access (no login)
-- Full EN/ZH content support (model fields + settings)
+- JWT（管理端认证）
 
-## Feature Scope
-- Product / Brand / Category CRUD
-- Product image upload + URL image management
-- Public inquiry submit + admin inquiry status/intent management
-- Article CRUD (EN/ZH)
-- Full-site content settings (EN/ZH)
-- Admin user management (create/disable/reset password/delete)
-- Order module removed (inquiry-only flow)
+## 当前业务范围
 
-## Setup
-1. Install dependencies
+- 产品/品牌/分类/燃料类型/驱动类型管理
+- 产品图片上传与 URL 图片管理
+- 前台线索提交（表单 + WhatsApp）
+- 后台线索管理（状态流转、意向标签、跟进记录）
+- 线索筛选（日期/意向/成交/战败）
+- 线索 CSV 导出
+- 新线索入池提示（管理端提醒 + 提示音）
+- 站点文案配置（中英）
+- 管理员管理（创建/启停/重置密码/删除）
+
+说明：文章系统与订单系统已下线。
+
+## 快速开始
+
+1. 安装依赖
+
 ```bash
 npm install
 ```
 
-2. Configure environment
+2. 配置环境变量
+
 ```bash
 cp .env.example .env
 ```
 
-3. Generate Prisma client and migrate
+3. 生成 Prisma Client 并执行迁移
+
 ```bash
 npm run db:generate
 npm run db:migrate
 ```
 
-4. Seed initial data
+4. 初始化种子数据
+
 ```bash
 npm run db:seed
 ```
 
-5. Start app
+5. 启动开发环境
+
 ```bash
 npm run dev
 ```
 
-## Default Admin
+## 默认管理员
+
 - Username: `admin`
 - Password: `admin123`
 
-Change password after first login.
+首次登录后请立即修改密码。
 
-## Key API Groups
-- Public: `/api/products`, `/api/brands`, `/api/categories`, `/api/articles`, `/api/settings`, `/api/inquiries`
-- Admin auth/users/settings: `/api/admin/*`
+## 关键路由
+
+- 前台：`/` `/products` `/products/[slug]` `/about` `/contact`
+- 后台：`/admin/login` `/admin/dashboard` `/admin/products` `/admin/inquiries` `/admin/settings` `/admin/users`
+
+## API 入口
+
+- Public：`/api/products` `/api/brands` `/api/categories` `/api/fuel-types` `/api/drive-types` `/api/settings` `/api/inquiries`
+- Admin：`/api/admin/*`、`/api/inquiries/*`（管理动作需 Bearer Token）
+
+具体接口见：`docs/backend-api.md`

@@ -1,64 +1,85 @@
 ﻿"use client";
 
-import { useMemo, useState } from "react";
-import { deleteInquiry, updateInquiryIntent, updateInquiryWorkflow, useInquiriesAdmin } from "@/lib/api";
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  deleteInquiry,
+  downloadInquiriesCsv,
+  updateInquiryIntent,
+  updateInquiryWorkflow,
+  useInquiriesAdmin,
+} from "@/lib/api";
 import { Inquiry } from "@/lib/types";
 import { useLocale } from "@/lib/use-locale";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
+import { useAdminMessage } from "@/components/admin/AdminMessageProvider";
 
 type StatusAction = { status: Inquiry["status"]; zh: string; en: string };
 
 const ZH = {
-  pageTitle: "\u8BE2\u76D8\u7BA1\u7406",
-  product: "\u4EA7\u54C1",
-  source: "\u6765\u6E90",
-  customer: "\u5BA2\u6237",
-  status: "\u72B6\u6001",
-  tag: "\u6807\u7B7E",
-  nextFollowUp: "\u4E0B\u6B21\u8DDF\u8FDB",
-  message: "\u7559\u8A00",
-  actions: "\u64CD\u4F5C",
-  noTransitions: "\u65E0\u53EF\u6267\u884C\u6D41\u8F6C",
-  followUpDetail: "\u8DDF\u8FDB\u8BE6\u60C5",
-  delete: "\u5220\u9664",
-  noInquiries: "\u6682\u65E0\u8BE2\u76D8",
-  statusTransition: "\u72B6\u6001\u6D41\u8F6C",
-  intentTag: "\u610F\u5411\u6807\u7B7E",
-  nextFollowUpTime: "\u4E0B\u6B21\u8DDF\u8FDB\u65F6\u95F4",
-  intentNotes: "\u610F\u5411\u5907\u6CE8",
-  followUpNote: "\u8DDF\u8FDB\u8BB0\u5F55",
-  abandonReason: "\u653E\u5F03\u539F\u56E0",
-  abandonReasonHint: "\u4F8B\u5982\uFF1A\u4EF7\u683C\u9AD8 / \u4E0D\u9700\u8981 / \u5DF2\u8D2D\u4E70 / \u9519\u53F7",
-  recentLogs: "\u6700\u8FD1\u8DDF\u8FDB\u8BB0\u5F55",
-  saveFailed: "\u4FDD\u5B58\u5931\u8D25",
-  saving: "\u4FDD\u5B58\u4E2D...",
-  save: "\u786E\u5B9A",
-  cancel: "\u53D6\u6D88",
-  quickTransitions: "\u5FEB\u6377\u6D41\u8F6C",
-  deleteTitle: "\u5220\u9664\u8BE2\u76D8",
-  deleteConfirm: "\u786E\u8BA4\u5220\u9664\u8BE5\u8BE2\u76D8\u8BB0\u5F55\uFF1F\u6B64\u64CD\u4F5C\u4E0D\u53EF\u6062\u590D\u3002",
-  deleteConfirmBtn: "\u786E\u8BA4\u5220\u9664",
+  pageTitle: "线索管理",
+  source: "来源",
+  customerName: "客户姓名",
+  email: "客户邮箱",
+  phone: "客户电话",
+  country: "客户国家",
+  status: "客户状态",
+  tag: "客户标签",
+  nextFollowUp: "下次跟进",
+  message: "客户留言",
+  intentNotes: "意向备注",
+  createdAt: "创建时间",
+  actions: "操作",
+  noTransitions: "无可执行流转",
+  followUpDetail: "跟进详情",
+  delete: "删除",
+  noLeads: "暂无线索",
+  statusTransition: "状态流转",
+  intentTag: "意向标签",
+  nextFollowUpTime: "下次跟进时间",
+  followUpNote: "跟进记录",
+  abandonReason: "战败原因",
+  abandonReasonHint: "例如：价格高 / 暂无需求 / 已在他处采购",
+  recentLogs: "最近跟进记录",
+  saving: "保存中...",
+  save: "确定",
+  cancel: "取消",
+  quickTransitions: "快捷流转",
+  deleteTitle: "删除线索",
+  deleteConfirm: "确认删除该线索记录？此操作不可恢复。",
+  deleteConfirmBtn: "确认删除",
+  filters: "筛选条件",
+  dateFrom: "开始日期",
+  dateTo: "结束日期",
+  convertedOnly: "仅看已成交",
+  defeatedOnly: "仅看已战败",
+  clearFilters: "清空筛选",
+  exportCsv: "导出 CSV",
+  exporting: "导出中...",
+  leadAlert: "检测到新线索入池",
+  sourceGeneral: "通用线索",
+  sourceProduct: "产品线索",
 };
 
 const STATUS_LABEL: Record<Inquiry["status"], { zh: string; en: string }> = {
-  PENDING: { zh: "\u5F85\u8DDF\u8FDB", en: "Pending" },
-  FOLLOWING: { zh: "\u8DDF\u8FDB\u4E2D", en: "Following" },
-  WAITING_REPLY: { zh: "\u5F85\u56DE\u590D", en: "Waiting Reply" },
-  INTERESTED: { zh: "\u5DF2\u610F\u5411", en: "Interested" },
-  CONVERTED: { zh: "\u5DF2\u6210\u4EA4", en: "Converted" },
-  ABANDONED: { zh: "\u5DF2\u653E\u5F03", en: "Abandoned" },
+  PENDING: { zh: "待跟进", en: "Pending" },
+  FOLLOWING: { zh: "跟进中", en: "Following" },
+  WAITING_REPLY: { zh: "待回复", en: "Waiting Reply" },
+  INTERESTED: { zh: "已意向", en: "Interested" },
+  CONVERTED: { zh: "已成交", en: "Converted" },
+  ABANDONED: { zh: "已战败", en: "Lost" },
 };
 
 const TAG_LABEL: Record<Inquiry["tag"], { zh: string; en: string }> = {
-  HIGH: { zh: "\u9AD8\u610F\u5411", en: "High" },
-  MEDIUM: { zh: "\u4E2D\u7B49\u610F\u5411", en: "Medium" },
-  LOW: { zh: "\u4F4E\u610F\u5411", en: "Low" },
+  HIGH: { zh: "高意向", en: "High" },
+  MEDIUM: { zh: "中意向", en: "Medium" },
+  LOW: { zh: "低意向", en: "Low" },
 };
 
 const SOURCE_LABEL: Record<"GENERAL" | "PRODUCT", { zh: string; en: string }> = {
-  GENERAL: { zh: "\u901A\u7528\u8BE2\u76D8", en: "General Inquiry" },
-  PRODUCT: { zh: "\u8F66\u578B\u8BE2\u76D8", en: "Product Inquiry" },
+  GENERAL: { zh: ZH.sourceGeneral, en: "General Lead" },
+  PRODUCT: { zh: ZH.sourceProduct, en: "Product Lead" },
 };
 
 const STATUS_COLOR: Record<Inquiry["status"], string> = {
@@ -77,20 +98,20 @@ const TAG_COLOR: Record<Inquiry["tag"], string> = {
 };
 
 const STATUS_ACTIONS: Record<Inquiry["status"], StatusAction[]> = {
-  PENDING: [{ status: "FOLLOWING", zh: "\u5F00\u59CB\u8DDF\u8FDB", en: "Start Follow-up" }],
+  PENDING: [{ status: "FOLLOWING", zh: "开始跟进", en: "Start Follow-up" }],
   FOLLOWING: [
-    { status: "WAITING_REPLY", zh: "\u6807\u8BB0\u5F85\u56DE\u590D", en: "Mark Waiting" },
-    { status: "INTERESTED", zh: "\u6807\u8BB0\u5DF2\u610F\u5411", en: "Mark Interested" },
-    { status: "ABANDONED", zh: "\u6807\u8BB0\u5DF2\u653E\u5F03", en: "Mark Abandoned" },
+    { status: "WAITING_REPLY", zh: "标记待回复", en: "Mark Waiting" },
+    { status: "INTERESTED", zh: "标记已意向", en: "Mark Interested" },
+    { status: "ABANDONED", zh: "标记已战败", en: "Mark Lost" },
   ],
   WAITING_REPLY: [
-    { status: "FOLLOWING", zh: "\u518D\u6B21\u8DDF\u8FDB", en: "Follow-up Again" },
-    { status: "INTERESTED", zh: "\u6807\u8BB0\u5DF2\u610F\u5411", en: "Mark Interested" },
-    { status: "ABANDONED", zh: "\u6807\u8BB0\u5DF2\u653E\u5F03", en: "Mark Abandoned" },
+    { status: "FOLLOWING", zh: "再次跟进", en: "Follow-up Again" },
+    { status: "INTERESTED", zh: "标记已意向", en: "Mark Interested" },
+    { status: "ABANDONED", zh: "标记已战败", en: "Mark Lost" },
   ],
   INTERESTED: [
-    { status: "CONVERTED", zh: "\u5DF2\u6210\u4EA4", en: "Mark Converted" },
-    { status: "ABANDONED", zh: "\u5DF2\u653E\u5F03", en: "Mark Abandoned" },
+    { status: "CONVERTED", zh: "标记已成交", en: "Mark Converted" },
+    { status: "ABANDONED", zh: "标记已战败", en: "Mark Lost" },
   ],
   CONVERTED: [],
   ABANDONED: [],
@@ -114,9 +135,84 @@ function toIsoOrNull(value: string) {
   return new Date(value).toISOString();
 }
 
+function playLeadAlertSound() {
+  try {
+    const AudioContextRef = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioContextRef) return;
+    const audioContext = new AudioContextRef();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+
+    oscillator.type = "sine";
+    oscillator.frequency.setValueAtTime(880, audioContext.currentTime);
+    gainNode.gain.setValueAtTime(0.001, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.15, audioContext.currentTime + 0.02);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.25);
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + 0.26);
+  } catch {
+    // ignore audio errors in browsers that block autoplay
+  }
+}
+
 export default function AdminInquiriesPage() {
   const locale = useLocale();
-  const { inquiries, mutate } = useInquiriesAdmin({ lang: locale, pageSize: 200 });
+  const { pushMessage } = useAdminMessage();
+
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [tagFilter, setTagFilter] = useState<"" | Inquiry["tag"]>("");
+  const [convertedOnly, setConvertedOnly] = useState(false);
+  const [defeatedOnly, setDefeatedOnly] = useState(false);
+  const [exporting, setExporting] = useState(false);
+
+  const statusFilters = useMemo(() => {
+    const list: Inquiry["status"][] = [];
+    if (convertedOnly) list.push("CONVERTED");
+    if (defeatedOnly) list.push("ABANDONED");
+    return list;
+  }, [convertedOnly, defeatedOnly]);
+
+  const { inquiries, mutate, isLoading } = useInquiriesAdmin({
+    lang: locale,
+    pageSize: 200,
+    statuses: statusFilters.length > 0 ? statusFilters : undefined,
+    tag: tagFilter || undefined,
+    dateFrom: dateFrom || undefined,
+    dateTo: dateTo || undefined,
+  });
+
+  const initializedRef = useRef(false);
+  const latestCreatedAtRef = useRef("");
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      mutate();
+    }, 20000);
+    return () => clearInterval(timer);
+  }, [mutate]);
+
+  useEffect(() => {
+    if (!inquiries.length) return;
+
+    const newest = inquiries[0].createdAt;
+    if (!initializedRef.current) {
+      initializedRef.current = true;
+      latestCreatedAtRef.current = newest;
+      return;
+    }
+
+    const newestTs = new Date(newest).getTime();
+    const latestTs = new Date(latestCreatedAtRef.current).getTime();
+    if (newestTs > latestTs) {
+      latestCreatedAtRef.current = newest;
+      playLeadAlertSound();
+      pushMessage(locale === "zh" ? ZH.leadAlert : "New lead received", "info");
+    }
+  }, [inquiries, locale, pushMessage]);
 
   const [editing, setEditing] = useState<Inquiry | null>(null);
   const [targetStatus, setTargetStatus] = useState<Inquiry["status"] | null>(null);
@@ -128,6 +224,7 @@ export default function AdminInquiriesPage() {
 
   const [deleteTarget, setDeleteTarget] = useState<Inquiry | null>(null);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState("");
 
   const statusText = useMemo(
@@ -158,21 +255,102 @@ export default function AdminInquiriesPage() {
 
   const currentActions = editing ? STATUS_ACTIONS[editing.status] : [];
 
+  const handleExportCsv = async () => {
+    setExporting(true);
+    try {
+      const blob = await downloadInquiriesCsv({
+        statuses: statusFilters.length > 0 ? statusFilters : undefined,
+        tag: tagFilter || undefined,
+        dateFrom: dateFrom || undefined,
+        dateTo: dateTo || undefined,
+      });
+
+      const filename = `leads-${new Date().toISOString().slice(0, 10)}.csv`;
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      pushMessage(locale === "zh" ? "CSV 导出成功" : "CSV exported successfully", "success");
+    } catch (err: any) {
+      pushMessage(err?.message || (locale === "zh" ? "导出失败" : "Export failed"), "error");
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold">{locale === "zh" ? ZH.pageTitle : "Inquiry Management"}</h1>
+      <h1 className="text-3xl font-bold">{locale === "zh" ? ZH.pageTitle : "Lead Management"}</h1>
+
+      <div className="rounded border p-4">
+        <div className="mb-3 font-medium">{locale === "zh" ? ZH.filters : "Filters"}</div>
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-6">
+          <div className="space-y-1">
+            <label className="text-xs text-muted-foreground">{locale === "zh" ? ZH.dateFrom : "Date From"}</label>
+            <input className="h-10 w-full rounded border px-3" type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs text-muted-foreground">{locale === "zh" ? ZH.dateTo : "Date To"}</label>
+            <input className="h-10 w-full rounded border px-3" type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs text-muted-foreground">{locale === "zh" ? ZH.tag : "Tag"}</label>
+            <select className="h-10 w-full rounded border px-3" value={tagFilter} onChange={(e) => setTagFilter(e.target.value as "" | Inquiry["tag"])}>
+              <option value="">{locale === "zh" ? "全部标签" : "All Tags"}</option>
+              <option value="HIGH">{tagText("HIGH")}</option>
+              <option value="MEDIUM">{tagText("MEDIUM")}</option>
+              <option value="LOW">{tagText("LOW")}</option>
+            </select>
+          </div>
+          <label className="flex items-center gap-2 text-sm md:pt-7">
+            <input type="checkbox" checked={convertedOnly} onChange={(e) => setConvertedOnly(e.target.checked)} />
+            {locale === "zh" ? ZH.convertedOnly : "Converted only"}
+          </label>
+          <label className="flex items-center gap-2 text-sm md:pt-7">
+            <input type="checkbox" checked={defeatedOnly} onChange={(e) => setDefeatedOnly(e.target.checked)} />
+            {locale === "zh" ? ZH.defeatedOnly : "Lost only"}
+          </label>
+          <div className="flex gap-2 md:pt-7">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setDateFrom("");
+                setDateTo("");
+                setTagFilter("");
+                setConvertedOnly(false);
+                setDefeatedOnly(false);
+              }}
+            >
+              {locale === "zh" ? ZH.clearFilters : "Clear"}
+            </Button>
+            <Button type="button" onClick={handleExportCsv} disabled={exporting}>
+              {exporting ? (locale === "zh" ? ZH.exporting : "Exporting...") : locale === "zh" ? ZH.exportCsv : "Export CSV"}
+            </Button>
+          </div>
+        </div>
+      </div>
 
       <div className="rounded border">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b bg-muted/30 text-left">
-              <th className="px-3 py-2">{locale === "zh" ? ZH.product : "Product"}</th>
               <th className="px-3 py-2">{locale === "zh" ? ZH.source : "Source"}</th>
-              <th className="px-3 py-2">{locale === "zh" ? ZH.customer : "Customer"}</th>
+              <th className="px-3 py-2">{locale === "zh" ? ZH.customerName : "Name"}</th>
+              <th className="px-3 py-2">{locale === "zh" ? ZH.email : "Email"}</th>
+              <th className="px-3 py-2">{locale === "zh" ? ZH.phone : "Phone"}</th>
+              <th className="px-3 py-2">{locale === "zh" ? ZH.country : "Country"}</th>
               <th className="px-3 py-2">{locale === "zh" ? ZH.status : "Status"}</th>
               <th className="px-3 py-2">{locale === "zh" ? ZH.tag : "Tag"}</th>
               <th className="px-3 py-2">{locale === "zh" ? ZH.nextFollowUp : "Next Follow-up"}</th>
+              <th className="px-3 py-2">{locale === "zh" ? ZH.intentNotes : "Intent Notes"}</th>
               <th className="px-3 py-2">{locale === "zh" ? ZH.message : "Message"}</th>
+              <th className="px-3 py-2">{locale === "zh" ? ZH.createdAt : "Created At"}</th>
               <th className="px-3 py-2">{locale === "zh" ? ZH.actions : "Actions"}</th>
             </tr>
           </thead>
@@ -180,19 +358,14 @@ export default function AdminInquiriesPage() {
             {inquiries.map((inquiry) => (
               <tr key={inquiry.id} className="border-b align-top">
                 <td className="px-3 py-2">
-                  {inquiry.sourceType === "GENERAL"
-                    ? (locale === "zh" ? "通用询盘" : "General Inquiry")
-                    : inquiry.product?.name || inquiry.productId}
-                </td>
-                <td className="px-3 py-2">
-                  <span className={`inline-flex rounded-full border bg-slate-100 px-2 py-0.5 text-xs text-slate-700`}>
+                  <span className="inline-flex rounded-full border bg-slate-100 px-2 py-0.5 text-xs text-slate-700">
                     {sourceText((inquiry.sourceType as "GENERAL" | "PRODUCT") || "PRODUCT")}
                   </span>
                 </td>
-                <td className="px-3 py-2">
-                  <div>{inquiry.fullName}</div>
-                  <div className="text-xs text-muted-foreground">{inquiry.email}</div>
-                </td>
+                <td className="px-3 py-2">{inquiry.fullName}</td>
+                <td className="px-3 py-2">{inquiry.email}</td>
+                <td className="px-3 py-2">{inquiry.phone || "-"}</td>
+                <td className="px-3 py-2">{inquiry.country || "-"}</td>
                 <td className="px-3 py-2">
                   <span className={`inline-flex rounded-full border px-2 py-0.5 text-xs ${STATUS_COLOR[inquiry.status]}`}>
                     {statusText(inquiry.status)}
@@ -208,7 +381,11 @@ export default function AdminInquiriesPage() {
                     ? new Date(inquiry.nextFollowUpAt).toLocaleString(locale === "zh" ? "zh-CN" : "en-US")
                     : "-"}
                 </td>
+                <td className="max-w-[220px] px-3 py-2 text-muted-foreground">{inquiry.intentNotes || "-"}</td>
                 <td className="max-w-[220px] px-3 py-2 text-muted-foreground">{inquiry.message || "-"}</td>
+                <td className="px-3 py-2 text-xs text-muted-foreground">
+                  {new Date(inquiry.createdAt).toLocaleString(locale === "zh" ? "zh-CN" : "en-US")}
+                </td>
                 <td className="space-y-2 px-3 py-2">
                   <div className="flex flex-wrap gap-2">
                     {STATUS_ACTIONS[inquiry.status].map((action) => (
@@ -233,10 +410,10 @@ export default function AdminInquiriesPage() {
                 </td>
               </tr>
             ))}
-            {inquiries.length === 0 && (
+            {!isLoading && inquiries.length === 0 && (
               <tr>
-                <td colSpan={8} className="px-3 py-4 text-muted-foreground">
-                  {locale === "zh" ? ZH.noInquiries : "No inquiries"}
+                <td colSpan={12} className="px-3 py-4 text-muted-foreground">
+                  {locale === "zh" ? ZH.noLeads : "No leads"}
                 </td>
               </tr>
             )}
@@ -285,8 +462,11 @@ export default function AdminInquiriesPage() {
                 await mutate();
                 setEditing(null);
                 setTargetStatus(null);
+                pushMessage(locale === "zh" ? "线索更新成功" : "Lead updated successfully", "success");
               } catch (err: any) {
-                setError(err?.message || (locale === "zh" ? ZH.saveFailed : "Save failed"));
+                const message = err?.message || (locale === "zh" ? "保存失败" : "Save failed");
+                setError(message);
+                pushMessage(message, "error");
               } finally {
                 setSaving(false);
               }
@@ -335,7 +515,7 @@ export default function AdminInquiriesPage() {
 
             {targetStatus === "ABANDONED" || editing?.status === "ABANDONED" ? (
               <div className="space-y-1">
-                <label className="text-sm font-medium">{locale === "zh" ? ZH.abandonReason : "Abandon Reason"}</label>
+                <label className="text-sm font-medium">{locale === "zh" ? ZH.abandonReason : "Lost Reason"}</label>
                 <textarea
                   className="w-full rounded border px-3 py-2 text-sm"
                   rows={2}
@@ -410,32 +590,29 @@ export default function AdminInquiriesPage() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={Boolean(deleteTarget)} onOpenChange={(next) => !next && setDeleteTarget(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{locale === "zh" ? ZH.deleteTitle : "Delete Inquiry"}</DialogTitle>
-          </DialogHeader>
-          <p className="text-sm text-muted-foreground">
-            {locale === "zh" ? ZH.deleteConfirm : "Are you sure to delete this inquiry? This action cannot be undone."}
-          </p>
-          <div className="flex gap-2">
-            <Button
-              variant="destructive"
-              onClick={async () => {
-                if (!deleteTarget) return;
-                await deleteInquiry(deleteTarget.id);
-                await mutate();
-                setDeleteTarget(null);
-              }}
-            >
-              {locale === "zh" ? ZH.deleteConfirmBtn : "Delete"}
-            </Button>
-            <Button variant="outline" onClick={() => setDeleteTarget(null)}>
-              {locale === "zh" ? ZH.cancel : "Cancel"}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <ConfirmDialog
+        open={Boolean(deleteTarget)}
+        onOpenChange={(next) => !next && setDeleteTarget(null)}
+        title={locale === "zh" ? ZH.deleteTitle : "Delete Lead"}
+        description={locale === "zh" ? ZH.deleteConfirm : "Are you sure to delete this lead? This action cannot be undone."}
+        confirmText={locale === "zh" ? ZH.deleteConfirmBtn : "Delete"}
+        cancelText={locale === "zh" ? ZH.cancel : "Cancel"}
+        loading={deleting}
+        onConfirm={async () => {
+          if (!deleteTarget) return;
+          setDeleting(true);
+          try {
+            await deleteInquiry(deleteTarget.id);
+            await mutate();
+            setDeleteTarget(null);
+            pushMessage(locale === "zh" ? "线索删除成功" : "Lead deleted successfully", "success");
+          } catch (err: any) {
+            pushMessage(err?.message || (locale === "zh" ? "删除失败" : "Delete failed"), "error");
+          } finally {
+            setDeleting(false);
+          }
+        }}
+      />
     </div>
   );
 }

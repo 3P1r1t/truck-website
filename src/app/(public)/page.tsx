@@ -95,6 +95,20 @@ export default function HomePage() {
     settings.home_hero_image_url ||
     "https://images.unsplash.com/photo-1592417817098-8fd3d7dbe115?auto=format&fit=crop&w=1920&q=80";
 
+  const capabilityTitle = getSettingValueByLocale(
+    settings,
+    "home_capability_title",
+    locale,
+    locale === "zh" ? "核心能力" : "Core Capabilities"
+  );
+  const capabilitySubtitle = getSettingValueByLocale(
+    settings,
+    "home_capability_subtitle",
+    locale,
+    locale === "zh" ? "以再制造体系和工程能力支撑全球运输业务。"
+      : "Powered by remanufacturing standards and engineering delivery for global fleets."
+  );
+
   const solutionDefaults = SOLUTION_DEFAULTS[locale];
   const solutionsKicker = getSettingValueByLocale(
     settings,
@@ -189,43 +203,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="bg-white py-20">
-        <div className="section-shell grid gap-12 md:grid-cols-3">
-          {[
-            {
-              num: "01",
-              title: locale === "zh" ? "智能动力总成" : "Smart Powertrain",
-              desc:
-                locale === "zh"
-                  ? "通过工况感知与动力匹配策略，帮助客户在复杂路况下控制油耗。"
-                  : "Powertrain matching strategy helps optimize fuel consumption in demanding road conditions.",
-            },
-            {
-              num: "02",
-              title: locale === "zh" ? "全程状态管理" : "Connected Uptime",
-              desc:
-                locale === "zh"
-                  ? "远程诊断与维保节奏联动，减少计划外停机。"
-                  : "Remote diagnostics and maintenance rhythm reduce unplanned downtime.",
-            },
-            {
-              num: "03",
-              title: locale === "zh" ? "多能源能力" : "Multi-Energy Vision",
-              desc:
-                locale === "zh"
-                  ? "覆盖传统燃油与新能源方案，兼顾效率与可持续运营。"
-                  : "Support both diesel and new energy options for performance and sustainability goals.",
-            },
-          ].map((item) => (
-            <div key={item.num}>
-              <p className="text-5xl font-bold italic text-slate-100">{item.num}</p>
-              <h3 className="mt-3 border-l-4 border-primary pl-4 text-2xl font-semibold uppercase tracking-tight">{item.title}</h3>
-              <p className="mt-4 text-sm leading-7 text-slate-500">{item.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
       <section className="bg-slate-100 py-24">
         <div className="section-shell">
           <div className="mb-10 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
@@ -249,6 +226,50 @@ export default function HomePage() {
           ) : (
             <p className="text-slate-500">{t(locale, "empty_products")}</p>
           )}
+        </div>
+      </section>
+
+      <section className="bg-white py-20">
+        <div className="section-shell">
+          <div className="mb-10 max-w-3xl">
+            <div className="tire-line mb-4" />
+            <h2 className="text-4xl font-bold uppercase tracking-tight">{capabilityTitle}</h2>
+            <p className="mt-4 text-sm leading-7 text-slate-500">{capabilitySubtitle}</p>
+          </div>
+          <div className="grid gap-12 md:grid-cols-3">
+            {[
+              {
+                num: "01",
+                title: locale === "zh" ? "智能动力总成" : "Smart Powertrain",
+                desc:
+                  locale === "zh"
+                    ? "通过工况感知与动力匹配策略，帮助客户在复杂路况下控制油耗。"
+                    : "Powertrain matching strategy helps optimize fuel consumption in demanding road conditions.",
+              },
+              {
+                num: "02",
+                title: locale === "zh" ? "全程状态管理" : "Connected Uptime",
+                desc:
+                  locale === "zh"
+                    ? "远程诊断与维保节奏联动，减少计划外停机。"
+                    : "Remote diagnostics and maintenance rhythm reduce unplanned downtime.",
+              },
+              {
+                num: "03",
+                title: locale === "zh" ? "多能源能力" : "Multi-Energy Vision",
+                desc:
+                  locale === "zh"
+                    ? "覆盖传统燃油与新能源方案，兼顾效率与可持续运营。"
+                    : "Support both diesel and new energy options for performance and sustainability goals.",
+              },
+            ].map((item) => (
+              <div key={item.num}>
+                <p className="text-5xl font-bold italic text-slate-100">{item.num}</p>
+                <h3 className="mt-3 border-l-4 border-primary pl-4 text-2xl font-semibold uppercase tracking-tight">{item.title}</h3>
+                <p className="mt-4 text-sm leading-7 text-slate-500">{item.desc}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 

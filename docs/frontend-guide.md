@@ -11,8 +11,6 @@ src/app/
     page.tsx
     products/page.tsx
     products/[slug]/page.tsx
-    articles/page.tsx
-    articles/[slug]/page.tsx
     about/page.tsx
     contact/page.tsx
 
@@ -22,12 +20,10 @@ src/app/
     dashboard/page.tsx          -> redirect /admin/dashboard
     admin/
       login/page.tsx            // canonical login
-      dashboard/page.tsx        // canonical dashboard
+      dashboard/page.tsx
       products/page.tsx
       products/new/page.tsx     -> redirect /admin/products
-      articles/page.tsx
-      articles/new/page.tsx     -> redirect /admin/articles
-      inquiries/page.tsx
+      inquiries/page.tsx        // 线索管理
       pages/page.tsx            -> redirect /admin/settings
       settings/page.tsx
       users/page.tsx
@@ -43,7 +39,6 @@ src/app/
 - `/admin/login`
 - `/admin/dashboard`
 - `/admin/products`
-- `/admin/articles`
 - `/admin/inquiries`
 - `/admin/settings`
 - `/admin/users`
@@ -52,9 +47,10 @@ src/app/
 
 ## 功能范围
 
-- 公共站点：产品展示、文章、关于我们、联系与询盘
-- 管理后台：产品/品牌/分类/燃料/驱动、文章、询盘、站点设置、管理员管理
-- 业务模式：Inquiry-only（无订单模块）
+- 公共站点：产品展示、关于我们、联系与线索提交
+- 管理后台：产品相关 CRUD、线索管理、站点配置、管理员管理
+- 线索能力：筛选、CSV 导出、新线索提示
+- 业务模式：Lead-only（无文章、无订单）
 
 ## 国际化约定
 
@@ -82,4 +78,4 @@ npm run dev
 ## 注意事项
 
 - `.next` 或本地 node 进程占用时，`npm run build` 可能因 `EPERM` 失败。
-- `npm run lint` 若首次执行会触发 Next.js ESLint 初始化向导，需先完成配置。
+- 若执行 `npm run lint` 首次出现 Next ESLint 初始化向导，先完成初始化后再继续。

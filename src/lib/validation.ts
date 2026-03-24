@@ -67,21 +67,6 @@ export const productCreateSchema = z.object({
 
 export const productUpdateSchema = productCreateSchema.partial();
 
-export const articleCreateSchema = z.object({
-  title: z.string().min(1),
-  titleZh: z.string().optional().nullable(),
-  excerpt: z.string().optional().nullable(),
-  excerptZh: z.string().optional().nullable(),
-  content: z.string().min(1),
-  contentZh: z.string().optional().nullable(),
-  coverImage: imageUrlSchema,
-  categoryId: z.string().optional().nullable(),
-  isActive: z.boolean().optional(),
-  publishedAt: z.string().datetime().optional().nullable(),
-});
-
-export const articleUpdateSchema = articleCreateSchema.partial();
-
 export const inquiryCreateSchema = z.object({
   productId: z.string().min(1).optional().nullable(),
   sourceType: z.enum(["GENERAL", "PRODUCT"]).optional(),

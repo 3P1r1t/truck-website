@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LayoutDashboard, Package, FileText, MessageSquare, Settings, Users, LogOut } from "lucide-react";
+import { LayoutDashboard, Package, MessageSquare, Settings, Users, LogOut } from "lucide-react";
 import { clearAdminToken } from "@/lib/api";
 import { useLocale } from "@/lib/use-locale";
 import { t } from "@/lib/site-dictionary";
@@ -22,7 +22,6 @@ export function Sidebar() {
   const items = [
     { href: "/admin/dashboard", label: locale === "zh" ? "仪表盘" : "Dashboard", icon: LayoutDashboard },
     { href: "/admin/products", label: t(locale, "admin_products"), icon: Package },
-    { href: "/admin/articles", label: t(locale, "admin_articles"), icon: FileText },
     { href: "/admin/inquiries", label: t(locale, "admin_inquiries"), icon: MessageSquare },
     { href: "/admin/settings", label: t(locale, "admin_settings"), icon: Settings },
     { href: "/admin/users", label: t(locale, "admin_users"), icon: Users },

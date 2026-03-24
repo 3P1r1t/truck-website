@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Sidebar } from "@/components/admin/Sidebar";
 import { AdminHeader } from "@/components/admin/AdminHeader";
+import { AdminMessageProvider } from "@/components/admin/AdminMessageProvider";
 import { getAdminToken } from "@/lib/api";
 import { localeFromClient } from "@/lib/i18n";
 
@@ -33,7 +34,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <Sidebar />
       <div className="flex flex-1 flex-col">
         <AdminHeader />
-        <main className="flex-1 bg-gradient-to-b from-slate-100 to-slate-50 p-5">{children}</main>
+        <AdminMessageProvider>
+          <main className="flex-1 bg-gradient-to-b from-slate-100 to-slate-50 p-5">{children}</main>
+        </AdminMessageProvider>
       </div>
     </div>
   );

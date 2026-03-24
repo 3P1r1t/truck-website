@@ -130,28 +130,6 @@ export type Inquiry = {
   product?: Pick<Product, "id" | "slug" | "name"> | null;
 };
 
-export type Article = {
-  id: string;
-  slug: string;
-  title: string;
-  titleEn: string;
-  titleZh?: string | null;
-  excerpt?: string | null;
-  excerptEn?: string | null;
-  excerptZh?: string | null;
-  content: string;
-  contentEn: string;
-  contentZh?: string | null;
-  coverImage?: string | null;
-  categoryId?: string | null;
-  isActive: boolean;
-  viewCount: number;
-  publishedAt?: string | null;
-  createdAt: string;
-  updatedAt: string;
-  authorId?: string | null;
-};
-
 export type SettingItem = {
   id?: string;
   key: string;

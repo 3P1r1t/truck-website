@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { uploadProductImage } from "@/lib/api";
-import { Button } from "@/components/ui/button";
+import { useAdminMessage } from "@/components/admin/AdminMessageProvider";
 
 export function ImageUploader({
   productId,
@@ -11,6 +11,7 @@ export function ImageUploader({
   productId: string;
   onUploaded: () => void;
 }) {
+  const { pushMessage } = useAdminMessage();
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
 
@@ -23,8 +24,11 @@ export function ImageUploader({
     try {
       await uploadProductImage(productId, file, "detail");
       onUploaded();
+      pushMessage("Image uploaded successfully", "success");
     } catch (err: any) {
-      setError(err?.message || "Upload failed");
+      const message = err?.message || "Upload failed";
+      setError(message);
+      pushMessage(message, "error");
     } finally {
       setUploading(false);
       event.target.value = "";

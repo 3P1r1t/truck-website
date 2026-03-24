@@ -6,6 +6,7 @@ import { Locale } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useAdminMessage } from "@/components/admin/AdminMessageProvider";
 
 type ProductPayload = {
   brandId: string;
@@ -64,6 +65,7 @@ export function ProductForm({
   onSubmit: (payload: ProductPayload) => Promise<void>;
   onCancel?: () => void;
 }) {
+  const { pushMessage } = useAdminMessage();
   const [form, setForm] = useState<ProductPayload>({
     brandId: initial?.brand?.id || brands[0]?.id || "",
     categoryId: initial?.category?.id || categories[0]?.id || "",
@@ -115,7 +117,9 @@ export function ProductForm({
         try {
           await onSubmit(form);
         } catch (err: any) {
-          setError(err?.message || (locale === "zh" ? "\u63D0\u4EA4\u5931\u8D25" : "Submit failed"));
+          const message = err?.message || (locale === "zh" ? "\u63D0\u4EA4\u5931\u8D25" : "Submit failed");
+          setError(message);
+          pushMessage(message, "error");
         } finally {
           setSubmitting(false);
         }

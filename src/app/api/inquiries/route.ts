@@ -22,6 +22,7 @@ const INQUIRY_STATUSES = [
   "CONVERTED",
   "ABANDONED",
 ] as const;
+const INQUIRY_TAGS = ["HIGH", "MEDIUM", "LOW"] as const;
 
 const DEFAULT_GENERAL_NAME = "General Inquiry Lead";
 const DEFAULT_PRODUCT_NAME = "Website Visitor";
@@ -107,11 +108,38 @@ export async function GET(request: NextRequest) {
     const { page, pageSize, skip } = parsePagination(searchParams);
 
     const status = searchParams.get("status");
+    const statuses = (searchParams.get("statuses") || "")
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean);
+    const tag = searchParams.get("tag");
+    const dateFrom = searchParams.get("dateFrom");
+    const dateTo = searchParams.get("dateTo");
     const productId = searchParams.get("productId");
 
     const where: any = {};
     if (status && INQUIRY_STATUSES.includes(status as (typeof INQUIRY_STATUSES)[number])) {
       where.status = status;
+    }
+    if (statuses.length > 0) {
+      const validStatuses = statuses.filter((item) =>
+        INQUIRY_STATUSES.includes(item as (typeof INQUIRY_STATUSES)[number])
+      );
+      if (validStatuses.length > 0) {
+        where.status = { in: validStatuses };
+      }
+    }
+    if (tag && INQUIRY_TAGS.includes(tag as (typeof INQUIRY_TAGS)[number])) {
+      where.tag = tag;
+    }
+    if (dateFrom || dateTo) {
+      where.createdAt = {};
+      if (dateFrom) {
+        where.createdAt.gte = new Date(`${dateFrom}T00:00:00.000Z`);
+      }
+      if (dateTo) {
+        where.createdAt.lte = new Date(`${dateTo}T23:59:59.999Z`);
+      }
     }
     if (productId) {
       where.productId = productId;

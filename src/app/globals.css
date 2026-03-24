@@ -106,14 +106,6 @@
   .admin-surface {
     @apply rounded-sm border border-slate-200 bg-white shadow-[0_10px_25px_-20px_rgba(15,23,42,0.5)];
   }
-
-  .article-content p {
-    @apply mb-4;
-  }
-
-  .article-content img {
-    @apply my-4 h-auto w-full rounded border object-contain;
-  }
 }
 
 @keyframes tire-shine {

@@ -5,6 +5,7 @@ import { adminGetSettings, adminUpdateSettings, uploadAsset } from "@/lib/api";
 import { SettingItem } from "@/lib/types";
 import { useLocale } from "@/lib/use-locale";
 import { Button } from "@/components/ui/button";
+import { useAdminMessage } from "@/components/admin/AdminMessageProvider";
 
 const REQUIRED_SETTINGS: SettingItem[] = [
   {
@@ -72,6 +73,38 @@ const REQUIRED_SETTINGS: SettingItem[] = [
     group: "home",
     label: "Hero Title Line 2 Color",
     labelZh: "首页主标题第二行颜色",
+  },
+  {
+    key: "home_capability_title_en",
+    value: "Core Capabilities",
+    type: "text",
+    group: "home",
+    label: "Capabilities Title (EN)",
+    labelZh: "首页能力区标题(英文)",
+  },
+  {
+    key: "home_capability_title_zh",
+    value: "核心能力",
+    type: "text",
+    group: "home",
+    label: "Capabilities Title (ZH)",
+    labelZh: "首页能力区标题(中文)",
+  },
+  {
+    key: "home_capability_subtitle_en",
+    value: "Powered by remanufacturing standards and engineering delivery for global fleets.",
+    type: "text",
+    group: "home",
+    label: "Capabilities Subtitle (EN)",
+    labelZh: "首页能力区副标题(英文)",
+  },
+  {
+    key: "home_capability_subtitle_zh",
+    value: "以再制造体系和工程能力支撑全球运输业务。",
+    type: "text",
+    group: "home",
+    label: "Capabilities Subtitle (ZH)",
+    labelZh: "首页能力区副标题(中文)",
   },
   {
     key: "home_solutions_kicker_en",
@@ -283,6 +316,38 @@ const REQUIRED_SETTINGS: SettingItem[] = [
     labelZh: "关于卡片1标题(英文)",
   },
   {
+    key: "about_profile_kicker_en",
+    value: "Company Profile",
+    type: "text",
+    group: "about",
+    label: "About Profile Kicker (EN)",
+    labelZh: "关于我们简介标签(英文)",
+  },
+  {
+    key: "about_profile_kicker_zh",
+    value: "企业介绍",
+    type: "text",
+    group: "about",
+    label: "About Profile Kicker (ZH)",
+    labelZh: "关于我们简介标签(中文)",
+  },
+  {
+    key: "about_profile_title_en",
+    value: "Tengyu Remanufacturing System",
+    type: "text",
+    group: "about",
+    label: "About Profile Title (EN)",
+    labelZh: "关于我们简介标题(英文)",
+  },
+  {
+    key: "about_profile_title_zh",
+    value: "腾宇商用车再制造",
+    type: "text",
+    group: "about",
+    label: "About Profile Title (ZH)",
+    labelZh: "关于我们简介标题(中文)",
+  },
+  {
     key: "about_card_1_title_zh",
     value: "质量连接你我",
     type: "text",
@@ -389,6 +454,7 @@ function mergeRequired(items: SettingItem[]) {
 
 export default function AdminSettingsPage() {
   const locale = useLocale();
+  const { pushMessage } = useAdminMessage();
   const [items, setItems] = useState<SettingItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -404,7 +470,9 @@ export default function AdminSettingsPage() {
       setItems(mergeRequired(data));
       setError("");
     } catch (err: any) {
-      setError(err?.message || (locale === "zh" ? "加载失败" : "Failed to load settings"));
+      const message = err?.message || (locale === "zh" ? "加载失败" : "Failed to load settings");
+      setError(message);
+      pushMessage(message, "error");
     } finally {
       setLoading(false);
     }
@@ -447,9 +515,13 @@ export default function AdminSettingsPage() {
             try {
               const saved = await adminUpdateSettings(items);
               setItems(mergeRequired(saved));
-              setMessage(locale === "zh" ? "保存成功" : "Saved");
+              const successMessage = locale === "zh" ? "保存成功" : "Saved";
+              setMessage(successMessage);
+              pushMessage(successMessage, "success");
             } catch (err: any) {
-              setError(err?.message || (locale === "zh" ? "保存失败" : "Save failed"));
+              const message = err?.message || (locale === "zh" ? "保存失败" : "Save failed");
+              setError(message);
+              pushMessage(message, "error");
             } finally {
               setSaving(false);
             }
@@ -513,8 +585,11 @@ export default function AdminSettingsPage() {
                                     try {
                                       const uploaded = await uploadAsset(file, "settings");
                                       updateItem(index, { value: uploaded.path });
+                                      pushMessage(locale === "zh" ? "上传成功" : "Upload succeeded", "success");
                                     } catch (err: any) {
-                                      setError(err?.message || (locale === "zh" ? "上传失败" : "Upload failed"));
+                                      const message = err?.message || (locale === "zh" ? "上传失败" : "Upload failed");
+                                      setError(message);
+                                      pushMessage(message, "error");
                                     } finally {
                                       setUploadingKey("");
                                       event.currentTarget.value = "";

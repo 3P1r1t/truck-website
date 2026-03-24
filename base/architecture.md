@@ -17,7 +17,7 @@
 
 ### 1. Presentation
 
-- Public 页面：产品、文章、关于、联系、询盘
+- Public 页面：主页、产品、关于、联系（线索提交）
 - Admin 页面：`/admin/*` 管理控制台
 
 ### 2. API
@@ -26,7 +26,6 @@
 
 - products / brands / categories
 - fuel-types / drive-types
-- articles
 - inquiries
 - settings
 - admin/auth / admin/users / admin/settings
@@ -47,17 +46,17 @@
 
 ## 当前业务边界
 
-- Inquiry-only：
-  - 公共端提交询盘
-  - 管理端跟进询盘状态与意向
-- 订单模块已移除，不包含 `/api/orders` 与订单后台页面
+- Lead-only：
+  - 公共端提交线索
+  - 管理端线索跟进、筛选、导出
+- 文章模块已移除
+- 订单模块已移除
 
 ## URL 规范（管理端）
 
 - `/admin/login`
 - `/admin/dashboard`
 - `/admin/products`
-- `/admin/articles`
 - `/admin/inquiries`
 - `/admin/settings`
 - `/admin/users`

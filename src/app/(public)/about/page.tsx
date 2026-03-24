@@ -16,6 +16,18 @@ export default function AboutPage() {
     "Tengyu International Truck Factory specializes in remanufacturing commercial vehicles and trailers for engineering and logistics scenarios."
   );
   const aboutImage = settings.about_image_url || "";
+  const profileKicker = getSettingValueByLocale(
+    settings,
+    "about_profile_kicker",
+    locale,
+    locale === "zh" ? "企业介绍" : "Company Profile"
+  );
+  const profileTitle = getSettingValueByLocale(
+    settings,
+    "about_profile_title",
+    locale,
+    locale === "zh" ? "腾宇商用车再制造" : "Tengyu Remanufacturing System"
+  );
 
   const cards = [
     {
@@ -67,10 +79,8 @@ export default function AboutPage() {
         <div className="industrial-panel overflow-hidden">
           <div className="grid grid-cols-1 gap-6 p-6 md:grid-cols-2 md:items-center md:p-8">
             <div>
-              <p className="industrial-kicker">{locale === "zh" ? "企业介绍" : "Company Profile"}</p>
-              <h2 className="mt-2 text-4xl font-bold uppercase tracking-tight">
-                {locale === "zh" ? "腾宇商用车再制造" : "Tengyu Remanufacturing System"}
-              </h2>
+              <p className="industrial-kicker">{profileKicker}</p>
+              <h2 className="mt-2 text-4xl font-bold uppercase tracking-tight">{profileTitle}</h2>
             </div>
             {aboutImage ? (
               <div className="relative h-56 overflow-hidden rounded-sm border border-slate-200 bg-slate-200 md:h-72">

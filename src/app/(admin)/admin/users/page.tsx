@@ -13,6 +13,8 @@ import { useLocale } from "@/lib/use-locale";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
+import { useAdminMessage } from "@/components/admin/AdminMessageProvider";
 
 type CreateForm = {
   username: string;
@@ -23,6 +25,7 @@ type CreateForm = {
 
 export default function AdminUsersPage() {
   const locale = useLocale();
+  const { pushMessage } = useAdminMessage();
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -42,6 +45,7 @@ export default function AdminUsersPage() {
   const [managePassword, setManagePassword] = useState("");
 
   const [deleteTarget, setDeleteTarget] = useState<AdminUser | null>(null);
+  const [deleteSubmitting, setDeleteSubmitting] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -50,7 +54,9 @@ export default function AdminUsersPage() {
       setUsers(data);
       setError("");
     } catch (err: any) {
-      setError(err?.message || (locale === "zh" ? "加载失败" : "Failed to load users"));
+      const message = err?.message || (locale === "zh" ? "加载失败" : "Failed to load users");
+      setError(message);
+      pushMessage(message, "error");
     } finally {
       setLoading(false);
     }
@@ -139,8 +145,11 @@ export default function AdminUsersPage() {
                 await adminCreateUser(createForm);
                 setCreateOpen(false);
                 await load();
+                pushMessage(locale === "zh" ? "管理员创建成功" : "Admin created successfully", "success");
               } catch (err: any) {
-                setError(err?.message || (locale === "zh" ? "创建失败" : "Failed to create user"));
+                const message = err?.message || (locale === "zh" ? "创建失败" : "Failed to create user");
+                setError(message);
+                pushMessage(message, "error");
               } finally {
                 setCreateSubmitting(false);
               }
@@ -214,8 +223,11 @@ export default function AdminUsersPage() {
                 }
                 setManageTarget(null);
                 await load();
+                pushMessage(locale === "zh" ? "管理员更新成功" : "Admin updated successfully", "success");
               } catch (err: any) {
-                setError(err?.message || (locale === "zh" ? "保存失败" : "Failed to save user"));
+                const message = err?.message || (locale === "zh" ? "保存失败" : "Failed to save user");
+                setError(message);
+                pushMessage(message, "error");
               } finally {
                 setManageSubmitting(false);
               }
@@ -253,32 +265,29 @@ export default function AdminUsersPage() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={Boolean(deleteTarget)} onOpenChange={(next) => !next && setDeleteTarget(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{locale === "zh" ? "删除管理员" : "Delete Admin"}</DialogTitle>
-          </DialogHeader>
-          <p className="text-sm text-muted-foreground">
-            {locale === "zh" ? "确认删除该管理员？此操作不可恢复。" : "Are you sure to delete this admin user? This action cannot be undone."}
-          </p>
-          <div className="flex gap-2">
-            <Button
-              variant="destructive"
-              onClick={async () => {
-                if (!deleteTarget) return;
-                await adminDeleteUser(deleteTarget.id);
-                setDeleteTarget(null);
-                await load();
-              }}
-            >
-              {locale === "zh" ? "确认删除" : "Delete"}
-            </Button>
-            <Button variant="outline" onClick={() => setDeleteTarget(null)}>
-              {locale === "zh" ? "取消" : "Cancel"}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <ConfirmDialog
+        open={Boolean(deleteTarget)}
+        onOpenChange={(next) => !next && setDeleteTarget(null)}
+        title={locale === "zh" ? "删除管理员" : "Delete Admin"}
+        description={locale === "zh" ? "确认删除该管理员？此操作不可恢复。" : "Are you sure to delete this admin user? This action cannot be undone."}
+        confirmText={locale === "zh" ? "确认删除" : "Delete"}
+        cancelText={locale === "zh" ? "取消" : "Cancel"}
+        loading={deleteSubmitting}
+        onConfirm={async () => {
+          if (!deleteTarget) return;
+          setDeleteSubmitting(true);
+          try {
+            await adminDeleteUser(deleteTarget.id);
+            setDeleteTarget(null);
+            await load();
+            pushMessage(locale === "zh" ? "管理员删除成功" : "Admin deleted successfully", "success");
+          } catch (err: any) {
+            pushMessage(err?.message || (locale === "zh" ? "删除失败" : "Delete failed"), "error");
+          } finally {
+            setDeleteSubmitting(false);
+          }
+        }}
+      />
     </div>
   );
 }

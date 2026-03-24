@@ -4,7 +4,6 @@ import useSWR, { mutate } from "swr";
 import type {
   ApiEnvelope,
   AdminUser,
-  Article,
   Brand,
   Category,
   DriveTypeOption,
@@ -179,43 +178,6 @@ export function useDriveTypes(lang?: string) {
   };
 }
 
-export function useArticles(params?: {
-  lang?: string;
-  page?: number;
-  pageSize?: number;
-  search?: string;
-  includeInactive?: boolean;
-}) {
-  const searchParams = new URLSearchParams();
-  if (params?.lang) searchParams.set("lang", params.lang);
-  if (params?.page) searchParams.set("page", String(params.page));
-  if (params?.pageSize) searchParams.set("pageSize", String(params.pageSize));
-  if (params?.search) searchParams.set("search", params.search);
-  if (params?.includeInactive) searchParams.set("includeInactive", "true");
-
-  const key = `/articles${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;
-  const { data, error, isLoading } = useSWR(key, fetcherWithMeta<Article[]>);
-
-  return {
-    articles: data?.data || [],
-    pagination: data?.pagination,
-    isLoading,
-    isError: error,
-    mutate: () => mutate(key),
-  };
-}
-
-export function useArticle(slug: string, lang?: string) {
-  const key = slug ? withLang(`/articles/${slug}`, lang) : null;
-  const { data, error, isLoading } = useSWR(key, fetcher<Article>);
-  return {
-    article: data,
-    isLoading,
-    isError: error,
-    mutate: () => key && mutate(key),
-  };
-}
-
 export function useSettings(lang?: string, group?: string) {
   const path = `/settings${group ? `?group=${group}` : ""}`;
   const key = withLang(path, lang);
@@ -229,12 +191,25 @@ export function useSettings(lang?: string, group?: string) {
   };
 }
 
-export function useInquiriesAdmin(params?: { page?: number; pageSize?: number; status?: string; lang?: string }) {
+export function useInquiriesAdmin(params?: {
+  page?: number;
+  pageSize?: number;
+  status?: Inquiry["status"];
+  statuses?: Inquiry["status"][];
+  tag?: Inquiry["tag"];
+  dateFrom?: string;
+  dateTo?: string;
+  lang?: string;
+}) {
   const searchParams = new URLSearchParams();
   if (params?.lang) searchParams.set("lang", params.lang);
   if (params?.page) searchParams.set("page", String(params.page));
   if (params?.pageSize) searchParams.set("pageSize", String(params.pageSize));
   if (params?.status) searchParams.set("status", params.status);
+  if (params?.statuses && params.statuses.length > 0) searchParams.set("statuses", params.statuses.join(","));
+  if (params?.tag) searchParams.set("tag", params.tag);
+  if (params?.dateFrom) searchParams.set("dateFrom", params.dateFrom);
+  if (params?.dateTo) searchParams.set("dateTo", params.dateTo);
 
   const key = `/inquiries${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;
   const { data, error, isLoading } = useSWR(key, async (url: string) => request<Inquiry[]>(url, {}, true));
@@ -547,37 +522,6 @@ export async function deleteDriveType(id: string) {
   await mutate((key) => typeof key === "string" && key.startsWith("/drive-types"));
 }
 
-export async function createArticle(payload: Record<string, unknown>) {
-  const { data } = await request<Article>(
-    "/articles",
-    {
-      method: "POST",
-      body: JSON.stringify(payload),
-    },
-    true
-  );
-  await mutate((key) => typeof key === "string" && key.startsWith("/articles"));
-  return data;
-}
-
-export async function updateArticle(slug: string, payload: Record<string, unknown>) {
-  const { data } = await request<Article>(
-    `/articles/${slug}`,
-    {
-      method: "PUT",
-      body: JSON.stringify(payload),
-    },
-    true
-  );
-  await mutate((key) => typeof key === "string" && key.startsWith("/articles"));
-  return data;
-}
-
-export async function deleteArticle(slug: string) {
-  await request(`/articles/${slug}`, { method: "DELETE" }, true);
-  await mutate((key) => typeof key === "string" && key.startsWith("/articles"));
-}
-
 export async function submitInquiry(payload: {
   productId?: string;
   sourceType?: "GENERAL" | "PRODUCT";
@@ -659,6 +603,37 @@ export async function updateInquiryIntent(
 export async function deleteInquiry(id: string) {
   await request(`/inquiries/${id}`, { method: "DELETE" }, true);
   await mutate((key) => typeof key === "string" && key.startsWith("/inquiries"));
+}
+
+export async function downloadInquiriesCsv(params?: {
+  status?: Inquiry["status"];
+  statuses?: Inquiry["status"][];
+  tag?: Inquiry["tag"];
+  dateFrom?: string;
+  dateTo?: string;
+}) {
+  const token = getAdminToken();
+  const searchParams = new URLSearchParams();
+  if (params?.status) searchParams.set("status", params.status);
+  if (params?.statuses && params.statuses.length > 0) searchParams.set("statuses", params.statuses.join(","));
+  if (params?.tag) searchParams.set("tag", params.tag);
+  if (params?.dateFrom) searchParams.set("dateFrom", params.dateFrom);
+  if (params?.dateTo) searchParams.set("dateTo", params.dateTo);
+
+  const response = await fetch(
+    `${API_BASE}/inquiries/export${searchParams.toString() ? `?${searchParams.toString()}` : ""}`,
+    {
+      method: "GET",
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    }
+  );
+
+  if (!response.ok) {
+    const payload = (await response.json().catch(() => null)) as ApiEnvelope<null> | null;
+    throw new Error(payload?.message || "Failed to export CSV");
+  }
+
+  return response.blob();
 }
 
 export async function adminGetSettings(group?: string) {
