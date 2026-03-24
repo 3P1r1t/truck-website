@@ -19,7 +19,7 @@ export function Sidebar() {
   const router = useRouter();
 
   const items = [
-    { href: "/dashboard", label: t(locale, "admin_dashboard"), icon: LayoutDashboard },
+    { href: "/admin/dashboard", label: t(locale, "admin_dashboard"), icon: LayoutDashboard },
     { href: "/admin/products", label: t(locale, "admin_products"), icon: Package },
     { href: "/admin/articles", label: t(locale, "admin_articles"), icon: FileText },
     { href: "/admin/inquiries", label: t(locale, "admin_inquiries"), icon: MessageSquare },
@@ -54,7 +54,7 @@ export function Sidebar() {
           className="flex w-full items-center gap-2 rounded px-3 py-2 text-sm text-muted-foreground hover:bg-muted"
           onClick={() => {
             clearAdminToken();
-            router.push(withLang("/login", locale));
+            router.push(withLang("/admin/login", locale));
           }}
         >
           <LogOut className="h-4 w-4" />

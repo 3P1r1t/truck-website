@@ -10,20 +10,21 @@ import { localeFromClient } from "@/lib/i18n";
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const isLoginPage = pathname === "/admin/login" || pathname === "/login";
 
   useEffect(() => {
-    if (pathname === "/login") {
+    if (isLoginPage) {
       return;
     }
 
     const token = getAdminToken();
     if (!token) {
       const lang = localeFromClient();
-      router.replace(`/login?lang=${lang}`);
+      router.replace(`/admin/login?lang=${lang}`);
     }
-  }, [pathname, router]);
+  }, [isLoginPage, router]);
 
-  if (pathname === "/login") {
+  if (isLoginPage) {
     return <>{children}</>;
   }
 
