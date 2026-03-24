@@ -10,7 +10,9 @@ import { getSettingValueByLocale, Locale } from "@/lib/i18n";
 import { buildWhatsAppLink } from "@/lib/utils";
 
 function withLang(path: string, locale: Locale) {
-  return `${path}${path.includes("?") ? "&" : "?"}lang=${locale}`;
+  const [pathname, hash] = path.split("#");
+  const base = `${pathname}${pathname.includes("?") ? "&" : "?"}lang=${locale}`;
+  return hash ? `${base}#${hash}` : base;
 }
 
 export function Footer() {
@@ -40,7 +42,9 @@ export function Footer() {
     <footer className="border-t border-white/10 bg-black text-slate-400">
       <div className="section-shell grid grid-cols-1 gap-10 py-16 md:grid-cols-2 lg:grid-cols-4">
         <div className="space-y-5 md:col-span-2">
-          <Image src="/tengyu.png" alt="Tengyu" width={170} height={46} className="h-9 w-auto brightness-0 invert" />
+          <span className="inline-flex rounded-sm bg-white px-2 py-1">
+            <Image src="/tengyu.png" alt="Tengyu" width={170} height={46} className="h-9 w-auto" />
+          </span>
           <p className="max-w-md text-sm leading-7">
             {getSettingValueByLocale(
               settings,
@@ -61,8 +65,8 @@ export function Footer() {
             <Link href={withLang("/products", locale)} className="block hover:text-primary">
               {t(locale, "nav_products")}
             </Link>
-            <Link href={withLang("/articles", locale)} className="block hover:text-primary">
-              {t(locale, "nav_articles")}
+            <Link href={withLang("/#solutions", locale)} className="block hover:text-primary">
+              {t(locale, "nav_solutions")}
             </Link>
             <Link href={withLang("/about", locale)} className="block hover:text-primary">
               {t(locale, "nav_about")}

@@ -1,21 +1,38 @@
 ﻿"use client";
 
-import { FormEvent, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ProductCard } from "@/components/public/ProductCard";
-import { submitInquiry, useArticles, useProducts, useSettings } from "@/lib/api";
+import { ContactMethodCard } from "@/components/public/ContactMethodCard";
+import { useProducts, useSettings } from "@/lib/api";
 import { useLocale } from "@/lib/use-locale";
 import { t } from "@/lib/site-dictionary";
 import { getSettingValueByLocale, Locale } from "@/lib/i18n";
 
 function withLang(path: string, locale: Locale) {
-  return `${path}${path.includes("?") ? "&" : "?"}lang=${locale}`;
+  const [pathname, hash] = path.split("#");
+  const base = `${pathname}${pathname.includes("?") ? "&" : "?"}lang=${locale}`;
+  return hash ? `${base}#${hash}` : base;
 }
 
-const SOLUTION_BLOCKS = {
+function safeColor(input: string | undefined, fallback: string) {
+  const value = (input || "").trim();
+  if (!value) return fallback;
+  if (/^#[0-9a-fA-F]{3,8}$/.test(value)) return value;
+  if (/^(rgb|rgba|hsl|hsla)\(/.test(value)) return value;
+  if (/^[a-zA-Z]{3,20}$/.test(value)) return value;
+  return fallback;
+}
+
+type SolutionBlock = {
+  title: string;
+  desc: string;
+};
+
+const SOLUTION_BLOCKS: Record<Locale, SolutionBlock[]> = {
   en: [
     {
       title: "Urban Distribution",
@@ -50,48 +67,37 @@ export default function HomePage() {
   const locale = useLocale();
   const { settings } = useSettings(locale);
   const { products } = useProducts({ lang: locale, featured: true, pageSize: 6 });
-  const { articles } = useArticles({ lang: locale, pageSize: 3 });
 
-  const heroTitle = getSettingValueByLocale(settings, "home_hero_title", locale, "Driving Your Success Forward");
+  const legacyHeroTitle = getSettingValueByLocale(settings, "home_hero_title", locale, "Driving Your Success Forward");
+  const [legacyLine1, legacyLine2] = legacyHeroTitle.split("\n");
+  const heroLine1 = getSettingValueByLocale(
+    settings,
+    "home_hero_title_line1",
+    locale,
+    legacyLine1 || (locale === "zh" ? "驱动" : "Driving Your")
+  );
+  const heroLine2 = getSettingValueByLocale(
+    settings,
+    "home_hero_title_line2",
+    locale,
+    legacyLine2 || (locale === "zh" ? "成功前行" : "Success Forward")
+  );
+  const heroLine1Color = safeColor(settings.home_hero_title_line1_color, "#FFFFFF");
+  const heroLine2Color = safeColor(settings.home_hero_title_line2_color, "#8B1D21");
+
   const heroSubtitle = getSettingValueByLocale(
     settings,
     "home_hero_subtitle",
     locale,
     "Tengyu provides remanufactured commercial vehicles and reliable fleet solutions for global transport companies."
   );
-  const heroImage = settings.home_hero_image_url ||
+  const heroImage =
+    settings.home_hero_image_url ||
     "https://images.unsplash.com/photo-1592417817098-8fd3d7dbe115?auto=format&fit=crop&w=1920&q=80";
 
-  const [quickEmail, setQuickEmail] = useState("");
-  const [quickSubmitting, setQuickSubmitting] = useState(false);
-  const [quickMessage, setQuickMessage] = useState("");
-  const [quickError, setQuickError] = useState("");
-
-  const submitQuickInquiry = async (event: FormEvent) => {
-    event.preventDefault();
-    setQuickSubmitting(true);
-    setQuickError("");
-    setQuickMessage("");
-
-    try {
-      await submitInquiry({
-        sourceType: "GENERAL",
-        email: quickEmail,
-        message:
-          locale === "zh"
-            ? "Quick inquiry from homepage email form"
-            : "Quick inquiry from homepage email form",
-      });
-      setQuickMessage(locale === "zh" ? "询盘已提交，我们会尽快联系您。" : "Inquiry submitted. We will contact you soon.");
-      setQuickEmail("");
-    } catch (error: any) {
-      setQuickError(error?.message || "Submit failed");
-    } finally {
-      setQuickSubmitting(false);
-    }
-  };
-
-  const solutionBlocks = locale === "zh" ? SOLUTION_BLOCKS.zh : SOLUTION_BLOCKS.en;
+  const solutionBlocks = SOLUTION_BLOCKS[locale];
+  const [activeSolution, setActiveSolution] = useState<SolutionBlock | null>(null);
+  const [heroContactOpen, setHeroContactOpen] = useState(false);
 
   return (
     <div>
@@ -106,7 +112,14 @@ export default function HomePage() {
         <div className="section-shell flex min-h-[82vh] items-center py-24">
           <div className="max-w-3xl space-y-7">
             <div className="tire-line" />
-            <h1 className="text-5xl font-bold uppercase leading-[1.05] tracking-tight md:text-7xl">{heroTitle}</h1>
+            <h1 className="text-5xl font-bold uppercase leading-[1.05] tracking-tight md:text-7xl">
+              <span className="block" style={{ color: heroLine1Color }}>
+                {heroLine1}
+              </span>
+              <span className="mt-1 block italic" style={{ color: heroLine2Color }}>
+                {heroLine2}
+              </span>
+            </h1>
             <p className="max-w-2xl text-lg text-slate-200 md:text-xl">{heroSubtitle}</p>
             <div className="flex flex-col gap-4 sm:flex-row">
               <Button asChild className="rounded-sm bg-white px-8 py-6 text-xs font-semibold uppercase tracking-[0.18em] text-slate-900 hover:bg-primary hover:text-white">
@@ -115,26 +128,15 @@ export default function HomePage() {
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
-              <Button asChild variant="outline" className="rounded-sm border-white/40 bg-white/5 px-8 py-6 text-xs font-semibold uppercase tracking-[0.18em] text-white hover:bg-white/15">
-                <Link href={withLang("/contact", locale)}>{t(locale, "hero_cta_secondary")}</Link>
+              <Button
+                type="button"
+                variant="outline"
+                className="rounded-sm border-white/40 bg-white/5 px-8 py-6 text-xs font-semibold uppercase tracking-[0.18em] text-white hover:bg-white/15"
+                onClick={() => setHeroContactOpen(true)}
+              >
+                <span className="relative mr-2 inline-flex h-2 w-2"><span className="absolute inline-flex h-full w-full rounded-full bg-green-500 animate-ping" /><span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" /></span>{t(locale, "hero_cta_secondary")}
               </Button>
             </div>
-
-            <form onSubmit={submitQuickInquiry} className="industrial-panel mt-8 max-w-2xl border-white/10 bg-white/10 p-2 backdrop-blur sm:flex sm:items-center">
-              <Input
-                required
-                type="email"
-                value={quickEmail}
-                onChange={(event) => setQuickEmail(event.target.value)}
-                placeholder={locale === "zh" ? "输入企业邮箱，快速获取方案" : "Enter business email for quick inquiry"}
-                className="h-12 border-0 bg-transparent text-sm text-white placeholder:text-slate-300 focus-visible:ring-0"
-              />
-              <Button disabled={quickSubmitting} className="mt-2 h-12 w-full rounded-sm bg-primary text-xs font-semibold uppercase tracking-[0.18em] hover:bg-primary/90 sm:mt-0 sm:w-auto sm:px-8">
-                {quickSubmitting ? (locale === "zh" ? "提交中" : "Submitting") : locale === "zh" ? "免费询价" : "Get Free Quote"}
-              </Button>
-            </form>
-            {quickError ? <p className="text-sm text-red-200">{quickError}</p> : null}
-            {quickMessage ? <p className="text-sm text-emerald-200">{quickMessage}</p> : null}
           </div>
         </div>
       </section>
@@ -202,7 +204,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="bg-white py-24">
+      <section id="solutions" className="bg-white py-24">
         <div className="section-shell">
           <div className="mb-12">
             <div className="tire-line mb-4" />
@@ -218,6 +220,14 @@ export default function HomePage() {
                 <div className="space-y-4 p-6">
                   <h3 className="text-2xl font-semibold uppercase tracking-tight">{item.title}</h3>
                   <p className="text-sm leading-7 text-slate-500">{item.desc}</p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-10 rounded-sm text-xs font-semibold uppercase tracking-[0.14em]"
+                    onClick={() => setActiveSolution(item)}
+                  >
+                    {t(locale, "solution_learn_more")}
+                  </Button>
                 </div>
               </article>
             ))}
@@ -225,27 +235,35 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="bg-slate-950 py-24 text-white">
-        <div className="section-shell">
-          <h2 className="text-4xl font-bold uppercase tracking-tight">{t(locale, "section_latest_articles")}</h2>
-          {articles.length > 0 ? (
-            <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-3">
-              {articles.map((article) => (
-                <Link
-                  key={article.id}
-                  href={withLang(`/articles/${article.slug}`, locale)}
-                  className="rounded-sm border border-white/10 bg-white/5 p-6 transition hover:border-primary/70 hover:bg-white/10"
-                >
-                  <h3 className="line-clamp-2 text-2xl font-semibold uppercase tracking-tight">{article.title}</h3>
-                  <p className="mt-3 line-clamp-3 text-sm leading-7 text-slate-300">{article.excerpt}</p>
-                </Link>
-              ))}
-            </div>
-          ) : (
-            <p className="mt-8 text-slate-300">{t(locale, "empty_articles")}</p>
-          )}
-        </div>
-      </section>
+      <Dialog open={heroContactOpen} onOpenChange={setHeroContactOpen}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle><span className="relative mr-2 inline-flex h-2 w-2"><span className="absolute inline-flex h-full w-full rounded-full bg-green-500 animate-ping" /><span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" /></span>{t(locale, "hero_cta_secondary")}</DialogTitle>
+          </DialogHeader>
+          <ContactMethodCard
+            sourceType="GENERAL"
+            contextNote={locale === "zh" ? "首页 Contact Us 按钮咨询" : "Inquiry from homepage Contact Us button"}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={Boolean(activeSolution)} onOpenChange={(next) => !next && setActiveSolution(null)}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {t(locale, "solution_dialog_title")}
+              {activeSolution ? `: ${activeSolution.title}` : ""}
+            </DialogTitle>
+          </DialogHeader>
+          {activeSolution ? (
+            <ContactMethodCard
+              sourceType="GENERAL"
+              contextNote={`${locale === "zh" ? "解决方案咨询" : "Solution inquiry"}: ${activeSolution.title}`}
+            />
+          ) : null}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+

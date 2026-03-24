@@ -83,7 +83,7 @@ export default function ProductDetailPage() {
 
       <section className="section-shell -mt-8 grid grid-cols-1 gap-8 lg:grid-cols-2">
         <ProductGallery images={product.images} />
-        <InquiryForm productId={product.id} />
+        <InquiryForm productId={product.id} productName={product.name} />
       </section>
 
       <section className="section-shell mt-10 space-y-8">
@@ -109,3 +109,4 @@ export default function ProductDetailPage() {
     </div>
   );
 }
+

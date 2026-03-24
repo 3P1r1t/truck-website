@@ -13,7 +13,9 @@ import { getSettingValueByLocale, Locale } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 function withLang(path: string, locale: Locale) {
-  return `${path}${path.includes("?") ? "&" : "?"}lang=${locale}`;
+  const [pathname, hash] = path.split("#");
+  const base = `${pathname}${pathname.includes("?") ? "&" : "?"}lang=${locale}`;
+  return hash ? `${base}#${hash}` : base;
 }
 
 export function Header() {
@@ -34,7 +36,7 @@ export function Header() {
   const navItems = [
     { href: "/", label: t(locale, "nav_home") },
     { href: "/products", label: t(locale, "nav_products") },
-    { href: "/articles", label: t(locale, "nav_articles") },
+    { href: "/#solutions", label: t(locale, "nav_solutions") },
     { href: "/about", label: t(locale, "nav_about") },
     { href: "/contact", label: t(locale, "nav_contact") },
   ];
@@ -60,7 +62,9 @@ export function Header() {
 
       <div className="section-shell flex h-20 items-center justify-between">
         <Link href={withLang("/", locale)} className="flex items-center gap-3">
-          <Image src="/tengyu.png" alt={siteName} width={164} height={48} className="h-10 w-auto md:h-12" priority />
+          <span className="inline-flex rounded-sm border border-slate-200 bg-white px-2 py-1">
+            <Image src="/tengyu.png" alt={siteName} width={164} height={48} className="h-9 w-auto md:h-10" priority />
+          </span>
           <span className="hidden h-6 border-l border-slate-300 sm:block" />
           <span className="hidden text-[11px] font-semibold uppercase tracking-[0.25em] text-slate-500 sm:block">
             {locale === "zh" ? "工业制造" : "Industrial Excellence"}
@@ -69,7 +73,9 @@ export function Header() {
 
         <nav className="hidden items-center gap-8 text-[11px] font-semibold uppercase tracking-[0.2em] lg:flex">
           {navItems.map((item) => {
-            const active = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
+            const active = item.href.startsWith("/#")
+              ? pathname === "/"
+              : pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
             return (
               <Link
                 key={item.href}

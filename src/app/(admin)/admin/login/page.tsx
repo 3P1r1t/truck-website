@@ -23,7 +23,7 @@ export default function AdminLoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-slate-950 p-4">
       <Card className="w-full max-w-md rounded-sm border-white/10 bg-white/95 shadow-2xl">
         <CardHeader className="space-y-4">
-          <Image src="/tengyu.png" alt="Tengyu" width={170} height={44} className="h-9 w-auto" />
+          <span className="inline-flex rounded-sm bg-slate-950 px-2 py-1"><Image src="/tengyu.png" alt="Tengyu" width={170} height={44} className="h-9 w-auto" /></span>
           <CardTitle className="text-2xl uppercase tracking-tight">{t(locale, "admin_login_title")}</CardTitle>
         </CardHeader>
         <CardContent>
@@ -62,3 +62,4 @@ export default function AdminLoginPage() {
     </div>
   );
 }
+

@@ -26,6 +26,54 @@ const REQUIRED_SETTINGS: SettingItem[] = [
     description: "Hero background image on homepage",
   },
   {
+    key: "home_hero_title_line1_en",
+    value: "Driving Your",
+    type: "text",
+    group: "home",
+    label: "Hero Title Line 1 (EN)",
+    labelZh: "首页主标题第一行(英文)",
+  },
+  {
+    key: "home_hero_title_line1_zh",
+    value: "驱动",
+    type: "text",
+    group: "home",
+    label: "Hero Title Line 1 (ZH)",
+    labelZh: "首页主标题第一行(中文)",
+  },
+  {
+    key: "home_hero_title_line2_en",
+    value: "Success Forward",
+    type: "text",
+    group: "home",
+    label: "Hero Title Line 2 (EN)",
+    labelZh: "首页主标题第二行(英文)",
+  },
+  {
+    key: "home_hero_title_line2_zh",
+    value: "成功前行",
+    type: "text",
+    group: "home",
+    label: "Hero Title Line 2 (ZH)",
+    labelZh: "首页主标题第二行(中文)",
+  },
+  {
+    key: "home_hero_title_line1_color",
+    value: "#FFFFFF",
+    type: "text",
+    group: "home",
+    label: "Hero Title Line 1 Color",
+    labelZh: "首页主标题第一行颜色",
+  },
+  {
+    key: "home_hero_title_line2_color",
+    value: "#8B1D21",
+    type: "text",
+    group: "home",
+    label: "Hero Title Line 2 Color",
+    labelZh: "首页主标题第二行颜色",
+  },
+  {
     key: "header_top_notice_en",
     value: "TENGYU GLOBAL: OPERATING IN 50+ COUNTRIES",
     type: "text",
@@ -342,5 +390,8 @@ export default function AdminSettingsPage() {
     </div>
   );
 }
+
+
+
 
 

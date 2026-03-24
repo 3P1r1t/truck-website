@@ -31,7 +31,7 @@ export function Sidebar() {
   return (
     <aside className="flex w-20 flex-col border-r border-white/10 bg-slate-950 text-slate-200 md:w-72">
       <div className="border-b border-white/10 px-3 py-4 md:px-5 md:py-6">
-        <Image src="/tengyu.png" alt="Tengyu" width={170} height={44} className="hidden h-9 w-auto brightness-0 invert md:block" />
+        <span className="hidden rounded-sm bg-white px-2 py-1 md:inline-flex"><Image src="/tengyu.png" alt="Tengyu" width={170} height={44} className="h-9 w-auto" /></span>
         <span className="mx-auto block text-center text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400 md:hidden">TY</span>
         <p className="mt-3 hidden text-[10px] uppercase tracking-[0.2em] text-slate-500 md:block">
           {locale === "zh" ? "管理后台" : "Admin Console"}
@@ -75,3 +75,4 @@ export function Sidebar() {
     </aside>
   );
 }
+
