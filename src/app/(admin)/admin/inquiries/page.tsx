@@ -189,10 +189,23 @@ export default function AdminInquiriesPage() {
   const latestCreatedAtRef = useRef("");
 
   useEffect(() => {
-    const timer = setInterval(() => {
+    const poll = () => {
+      if (document.visibilityState !== "visible") return;
+      if (!navigator.onLine) return;
       mutate();
-    }, 20000);
-    return () => clearInterval(timer);
+    };
+
+    const timer = window.setInterval(poll, 20000);
+    const handleFocus = () => poll();
+
+    window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleFocus);
+
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleFocus);
+    };
   }, [mutate]);
 
   useEffect(() => {
