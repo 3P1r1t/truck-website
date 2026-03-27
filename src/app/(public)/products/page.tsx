@@ -1,6 +1,6 @@
-﻿"use client";
+"use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ProductCard } from "@/components/public/ProductCard";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -13,12 +13,12 @@ export default function ProductsPage() {
 
   const [search, setSearch] = useState("");
   const [brandId, setBrandId] = useState("");
-  const [categoryId, setCategoryId] = useState("");
-
-  useEffect(() => {
-    const url = new URL(window.location.href);
-    setCategoryId(url.searchParams.get("category") || "");
-  }, []);
+  const [categoryId, setCategoryId] = useState(() => {
+    if (typeof window === "undefined") {
+      return "";
+    }
+    return new URL(window.location.href).searchParams.get("category") || "";
+  });
 
   const { products, isLoading } = useProducts({
     lang: locale,
@@ -51,7 +51,11 @@ export default function ProductsPage() {
               placeholder={t(locale, "filter_search")}
               className="h-11"
             />
-            <select className="h-11 rounded-sm border border-input bg-white px-3 text-sm" value={brandId} onChange={(e) => setBrandId(e.target.value)}>
+            <select
+              className="h-11 rounded-sm border border-input bg-white px-3 text-sm"
+              value={brandId}
+              onChange={(e) => setBrandId(e.target.value)}
+            >
               <option value="">{t(locale, "filter_all_brands")}</option>
               {brands.map((brand) => (
                 <option key={brand.id} value={brand.id}>
@@ -59,7 +63,11 @@ export default function ProductsPage() {
                 </option>
               ))}
             </select>
-            <select className="h-11 rounded-sm border border-input bg-white px-3 text-sm" value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
+            <select
+              className="h-11 rounded-sm border border-input bg-white px-3 text-sm"
+              value={categoryId}
+              onChange={(e) => setCategoryId(e.target.value)}
+            >
               <option value="">{t(locale, "filter_all_categories")}</option>
               {categories.map((category) => (
                 <option key={category.id} value={category.id}>
