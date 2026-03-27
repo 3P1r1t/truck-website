@@ -159,7 +159,7 @@ function playLeadAlertSound() {
 }
 
 export default function AdminInquiriesPage() {
-  const locale = useLocale();
+  const locale = useLocale("zh");
   const { pushMessage } = useAdminMessage();
 
   const [dateFrom, setDateFrom] = useState("");
@@ -263,6 +263,7 @@ export default function AdminInquiriesPage() {
         tag: tagFilter || undefined,
         dateFrom: dateFrom || undefined,
         dateTo: dateTo || undefined,
+        lang: locale,
       });
 
       const filename = `leads-${new Date().toISOString().slice(0, 10)}.csv`;

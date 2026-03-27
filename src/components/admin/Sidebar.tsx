@@ -16,7 +16,7 @@ function withLang(path: string, locale: Locale) {
 
 export function Sidebar() {
   const pathname = usePathname();
-  const locale = useLocale();
+  const locale = useLocale("zh");
   const router = useRouter();
 
   const items = [

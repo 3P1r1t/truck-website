@@ -12,10 +12,10 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 export default function AdminLoginPage() {
-  const locale = useLocale();
+  const locale = useLocale("zh");
   const router = useRouter();
-  const [username, setUsername] = useState("admin");
-  const [password, setPassword] = useState("admin123");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -36,7 +36,8 @@ export default function AdminLoginPage() {
 
               try {
                 await adminLogin(username, password);
-                router.push(`/admin/dashboard?lang=${locale}`);
+                document.cookie = "site_lang=zh; path=/; max-age=31536000";
+                router.push("/admin/dashboard?lang=zh");
               } catch (err: any) {
                 setError(err?.message || "Login failed");
               } finally {

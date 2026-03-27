@@ -31,7 +31,7 @@ export function localeFromRequest(request: NextRequest): Locale {
   return "en";
 }
 
-export function localeFromClient(input?: string | null): Locale {
+export function localeFromClient(input?: string | null, fallbackLocale: Locale = "en"): Locale {
   if (input) {
     return normalizeLocale(input);
   }
@@ -53,10 +53,10 @@ export function localeFromClient(input?: string | null): Locale {
       return normalizeLocale(fromCookie);
     }
 
-    return normalizeLocale(window.navigator.language);
+    return fallbackLocale;
   }
 
-  return "en";
+  return fallbackLocale;
 }
 
 export function pickLocalized(enValue: string | null | undefined, zhValue: string | null | undefined, locale: Locale) {

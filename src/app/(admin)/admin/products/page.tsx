@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import {
-  addProductImageByUrl,
   createBrand,
   createCategory,
   createDriveType,
@@ -76,9 +75,6 @@ const ZH = {
   noItems: "暂无数据",
   imageManager: "图片管理",
   uploadLocal: "本地上传",
-  addImageUrl: "添加图片链接",
-  add: "添加",
-  addFailed: "添加失败",
   mainImage: "主图",
   detailImage: "详情图",
 };
@@ -172,7 +168,7 @@ function NameEditor({
 }
 
 export default function AdminProductsPage() {
-  const locale = useLocale();
+  const locale = useLocale("zh");
   const { pushMessage } = useAdminMessage();
   const { products, mutate: mutateProducts } = useProducts({ lang: locale, pageSize: 200, includeInactive: true });
   const { brands, mutate: mutateBrands } = useBrands(locale, true);
@@ -184,8 +180,6 @@ export default function AdminProductsPage() {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [productModalOpen, setProductModalOpen] = useState(false);
   const [selectedProductId, setSelectedProductId] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
-  const [imageError, setImageError] = useState("");
   const [brandEditorOpen, setBrandEditorOpen] = useState(false);
   const [brandDraft, setBrandDraft] = useState<NameDraft>({ name: "", nameZh: "", isActive: true });
   const [categoryEditorOpen, setCategoryEditorOpen] = useState(false);
@@ -537,33 +531,9 @@ export default function AdminProductsPage() {
           </DialogHeader>
           {selectedProduct ? (
             <div className="space-y-4">
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div className="space-y-2 rounded border p-3">
-                  <h3 className="font-medium">{locale === "zh" ? ZH.uploadLocal : "Upload Image"}</h3>
-                  <ImageUploader productId={selectedProduct.id} onUploaded={mutateProducts} />
-                </div>
-                <div className="space-y-2 rounded border p-3">
-                  <h3 className="font-medium">{locale === "zh" ? ZH.addImageUrl : "Add Image URL"}</h3>
-                  <input className="h-10 w-full rounded border px-3" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://..." />
-                  {imageError ? <p className="text-sm text-destructive">{imageError}</p> : null}
-                  <Button
-                    onClick={async () => {
-                      try {
-                        setImageError("");
-                        await addProductImageByUrl(selectedProduct.id, { imageUrl, imageType: "detail" });
-                        setImageUrl("");
-                        await mutateProducts();
-                        pushMessage(locale === "zh" ? "图片添加成功" : "Image added successfully", "success");
-                      } catch (err: any) {
-                        const message = err?.message || (locale === "zh" ? ZH.addFailed : "Failed to add image URL");
-                        setImageError(message);
-                        pushMessage(message, "error");
-                      }
-                    }}
-                  >
-                    {locale === "zh" ? ZH.add : "Add"}
-                  </Button>
-                </div>
+              <div className="space-y-2 rounded border p-3">
+                <h3 className="font-medium">{locale === "zh" ? ZH.uploadLocal : "Upload Image"}</h3>
+                <ImageUploader productId={selectedProduct.id} onUploaded={async () => mutateProducts()} />
               </div>
               <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                 {selectedProduct.images.map((image) => (

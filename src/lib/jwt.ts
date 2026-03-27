@@ -9,9 +9,17 @@ export type JwtAdminPayload = {
 };
 
 const DEFAULT_EXPIRES_IN = "7d";
+const INSECURE_JWT_SECRETS = new Set(["change-me-in-production", "dev-jwt-secret-change-this"]);
 
 function jwtSecret() {
-  return process.env.JWT_SECRET || "dev-jwt-secret-change-this";
+  const secret = process.env.JWT_SECRET?.trim();
+  if (!secret) {
+    throw new Error("JWT_SECRET is required");
+  }
+  if (INSECURE_JWT_SECRETS.has(secret)) {
+    throw new Error("JWT_SECRET uses an insecure placeholder value");
+  }
+  return secret;
 }
 
 export function signAdminToken(payload: JwtAdminPayload) {

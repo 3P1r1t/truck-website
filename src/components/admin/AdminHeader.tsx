@@ -4,7 +4,7 @@ import { Menu } from "lucide-react";
 import { useLocale } from "@/lib/use-locale";
 
 export function AdminHeader() {
-  const locale = useLocale();
+  const locale = useLocale("zh");
   return (
     <header className="flex h-14 items-center justify-between border-b border-slate-200 bg-white px-4 text-xs uppercase tracking-[0.18em] text-slate-500">
       <span>{locale === "zh" ? "腾宇后台" : "Tengyu Admin"}</span>

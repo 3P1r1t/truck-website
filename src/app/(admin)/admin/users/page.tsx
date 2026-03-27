@@ -24,7 +24,7 @@ type CreateForm = {
 };
 
 export default function AdminUsersPage() {
-  const locale = useLocale();
+  const locale = useLocale("zh");
   const { pushMessage } = useAdminMessage();
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);

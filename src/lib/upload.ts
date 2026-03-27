@@ -3,6 +3,7 @@ import { randomUUID } from "crypto";
 import { extname, join } from "path";
 import { DeleteObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { loadEnvConfig } from "@next/env";
 import { EnvValidationError, getRequiredEnvMap } from "@/lib/env";
 
 const DEFAULT_MAX_UPLOAD_SIZE = 10 * 1024 * 1024;
@@ -44,6 +45,7 @@ export class UploadConfigError extends Error {
 
 let r2ConfigCache: R2Config | null = null;
 let r2ClientCache: S3Client | null = null;
+let envLoadAttempted = false;
 
 function getMaxUploadSize() {
   const parsed = Number(process.env.MAX_UPLOAD_SIZE);
@@ -87,6 +89,61 @@ function sanitizeExtension(filename: string, mimeType: string) {
   return mimeFallback[mimeType] || ".bin";
 }
 
+function readEnv(name: string) {
+  return process.env[name]?.trim() || "";
+}
+
+function firstEnvValue(names: string[]) {
+  for (const name of names) {
+    const value = readEnv(name);
+    if (value) {
+      return value;
+    }
+  }
+  return "";
+}
+
+function loadEnvOnce() {
+  if (envLoadAttempted) {
+    return;
+  }
+  envLoadAttempted = true;
+  try {
+    loadEnvConfig(process.cwd());
+  } catch {
+    // ignore runtime env reload errors
+  }
+}
+
+function readR2ConfigFromAliases(): R2Config | null {
+  const accountId = firstEnvValue(["R2_ACCOUNT_ID", "CLOUDFLARE_R2_ACCOUNT_ID", "CF_R2_ACCOUNT_ID"]);
+  const accessKeyId = firstEnvValue(["R2_ACCESS_KEY_ID", "CLOUDFLARE_R2_ACCESS_KEY_ID", "CF_R2_ACCESS_KEY_ID"]);
+  const secretAccessKey = firstEnvValue([
+    "R2_SECRET_ACCESS_KEY",
+    "CLOUDFLARE_R2_SECRET_ACCESS_KEY",
+    "CF_R2_SECRET_ACCESS_KEY",
+  ]);
+  const bucket = firstEnvValue(["R2_BUCKET", "R2_BUCKET_NAME", "CLOUDFLARE_R2_BUCKET"]);
+  const publicBaseUrl = firstEnvValue([
+    "R2_PUBLIC_BASE_URL",
+    "R2_PUBLIC_URL",
+    "R2_PUBLIC_BASE",
+    "CLOUDFLARE_R2_PUBLIC_BASE_URL",
+  ]);
+
+  if (!accountId || !accessKeyId || !secretAccessKey || !bucket || !publicBaseUrl) {
+    return null;
+  }
+
+  return {
+    accountId,
+    accessKeyId,
+    secretAccessKey,
+    bucket,
+    publicBaseUrl: publicBaseUrl.replace(/\/+$/, ""),
+  };
+}
+
 function getR2Config(): R2Config {
   if (r2ConfigCache) {
     return r2ConfigCache;
@@ -108,11 +165,27 @@ function getR2Config(): R2Config {
 
     return r2ConfigCache;
   } catch (error) {
-    if (error instanceof EnvValidationError) {
-      throw new UploadConfigError(error.message);
+    if (!(error instanceof EnvValidationError)) {
+      throw error;
     }
-    throw error;
   }
+
+  const aliasConfig = readR2ConfigFromAliases();
+  if (aliasConfig) {
+    r2ConfigCache = aliasConfig;
+    return r2ConfigCache;
+  }
+
+  loadEnvOnce();
+  const aliasConfigAfterReload = readR2ConfigFromAliases();
+  if (aliasConfigAfterReload) {
+    r2ConfigCache = aliasConfigAfterReload;
+    return r2ConfigCache;
+  }
+
+  throw new UploadConfigError(
+    "Missing required environment variables for R2 uploads: R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET, R2_PUBLIC_BASE_URL"
+  );
 }
 
 function getOptionalR2Config() {

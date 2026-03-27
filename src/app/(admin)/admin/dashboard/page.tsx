@@ -5,7 +5,7 @@ import { useInquiriesAdmin, useProducts } from "@/lib/api";
 import { useLocale } from "@/lib/use-locale";
 
 export default function AdminDashboardPage() {
-  const locale = useLocale();
+  const locale = useLocale("zh");
   const { products } = useProducts({ lang: locale, pageSize: 100 });
   const { inquiries } = useInquiriesAdmin({ lang: locale, pageSize: 100 });
 

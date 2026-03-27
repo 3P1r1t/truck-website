@@ -83,8 +83,16 @@ export default function AboutPage() {
               <h2 className="mt-3 text-m leading-7 text-slate-600">{profileTitle}</h2>
             </div>
             {aboutImage ? (
-              <div className="relative h-56 overflow-hidden rounded-sm border border-slate-200 bg-slate-200 md:h-72">
-                <Image src={aboutImage} alt={locale === "zh" ? "关于我们图片" : "About image"} fill className="object-cover" />
+              <div className="rounded-sm border border-slate-200 bg-white p-4 md:p-6">
+                <div className="mx-auto w-full max-w-[593px]">
+                  <Image
+                    src={aboutImage}
+                    alt={locale === "zh" ? "关于我们图片" : "About image"}
+                    width={593}
+                    height={467}
+                    className="h-auto w-full object-contain"
+                  />
+                </div>
               </div>
             ) : null}
           </div>

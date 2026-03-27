@@ -107,7 +107,7 @@ export default function HomePage() {
   const defaultHeroImage =
     "https://images.unsplash.com/photo-1592417817098-8fd3d7dbe115?auto=format&fit=crop&w=1920&q=80";
   const heroMediaPath = (settings.home_hero_image_url || "").trim();
-  const heroMediaUrl = heroMediaPath || "/Home-background.mp4";
+  const heroMediaUrl = heroMediaPath || "/Home-background-hero.mp4";
   const heroIsVideo = isVideoAsset(heroMediaUrl);
   const heroImageUrl = heroIsVideo ? defaultHeroImage : heroMediaUrl || defaultHeroImage;
 

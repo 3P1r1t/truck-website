@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
@@ -14,16 +14,25 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const isLoginPage = pathname === "/admin/login" || pathname === "/login";
 
   useEffect(() => {
+    const current = new URLSearchParams(window.location.search);
+    if (!current.get("lang")) {
+      document.cookie = "site_lang=zh; path=/; max-age=31536000";
+      const next = new URLSearchParams(current.toString());
+      next.set("lang", "zh");
+      router.replace(`${pathname}?${next.toString()}`);
+      return;
+    }
+
     if (isLoginPage) {
       return;
     }
 
     const token = getAdminToken();
     if (!token) {
-      const lang = localeFromClient();
+      const lang = localeFromClient(undefined, "zh");
       router.replace(`/admin/login?lang=${lang}`);
     }
-  }, [isLoginPage, router]);
+  }, [isLoginPage, pathname, router]);
 
   if (isLoginPage) {
     return <>{children}</>;
