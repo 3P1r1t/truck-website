@@ -500,7 +500,7 @@ function isVideoAsset(url: string) {
 }
 
 export default function AdminSettingsPage() {
-  const locale = useLocale("zh");
+  const locale = useLocale();
   const { pushMessage } = useAdminMessage();
   const [items, setItems] = useState<SettingItem[]>([]);
   const [loading, setLoading] = useState(true);
