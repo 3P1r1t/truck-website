@@ -54,10 +54,14 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       return fail("Product not found", 404);
     }
 
-    await prisma.product.update({
-      where: { id: product.id },
-      data: { viewCount: { increment: 1 } },
-    });
+    void prisma.product
+      .update({
+        where: { id: product.id },
+        data: { viewCount: { increment: 1 } },
+      })
+      .catch((error) => {
+        console.warn("Failed to increment product viewCount", error);
+      });
 
     return ok(mapProduct(product, locale));
   } catch (error) {
