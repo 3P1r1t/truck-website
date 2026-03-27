@@ -1,6 +1,6 @@
-﻿"use client";
+"use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { ProductImage } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -13,8 +13,21 @@ export function ProductGallery({ images }: { images: ProductImage[] }) {
   );
   const [index, setIndex] = useState(0);
 
+  useEffect(() => {
+    setIndex((prev) => {
+      if (sorted.length === 0) {
+        return 0;
+      }
+      return prev >= sorted.length ? sorted.length - 1 : prev;
+    });
+  }, [sorted.length]);
+
   if (sorted.length === 0) {
-    return <div className="industrial-panel flex aspect-[4/3] items-center justify-center text-muted-foreground">No image</div>;
+    return (
+      <div className="industrial-panel flex aspect-[4/3] items-center justify-center text-muted-foreground">
+        No image
+      </div>
+    );
   }
 
   const current = sorted[index];
@@ -22,7 +35,13 @@ export function ProductGallery({ images }: { images: ProductImage[] }) {
   return (
     <div className="space-y-3">
       <div className="relative aspect-[4/3] overflow-hidden rounded-sm border border-slate-200 bg-muted">
-        <Image src={current.url} alt={current.altText || "image"} fill className="object-cover" sizes="(max-width: 768px) 100vw, 50vw" />
+        <Image
+          src={current.url}
+          alt={current.altText || "image"}
+          fill
+          className="object-cover"
+          sizes="(max-width: 768px) 100vw, 50vw"
+        />
         {sorted.length > 1 ? (
           <>
             <Button
