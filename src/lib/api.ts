@@ -331,56 +331,72 @@ export async function deleteProduct(id: string) {
 }
 
 export async function uploadProductImage(productId: string, file: File, imageType: "main" | "detail", altText?: string) {
-  const token = getAdminToken();
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("imageType", imageType);
-  if (altText) {
-    formData.append("altText", altText);
-  }
-
-  const response = await fetch(`${API_BASE}/products/${productId}/images/upload`, {
-    method: "POST",
-    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-    body: formData,
-  });
-
-  const payload = (await response.json()) as ApiEnvelope<unknown>;
-  if (!response.ok || payload.code !== 0) {
-    throw new Error(payload.message || "Upload failed");
-  }
-
+  const uploaded = await uploadAsset(file, "products");
+  const { data } = await request(
+    `/products/${productId}/images/upload`,
+    {
+      method: "POST",
+      body: JSON.stringify({
+        imageUrl: uploaded.path,
+        imageType,
+        altText,
+      }),
+    },
+    true
+  );
   await mutate((key) => typeof key === "string" && key.startsWith("/products"));
-  return payload.data;
+  return data;
 }
 
 export async function uploadAsset(file: File, folder = "general", settingKey?: string) {
   const token = getAdminToken();
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("folder", folder);
-  if (settingKey) {
-    formData.append("settingKey", settingKey);
-  }
-
   const response = await fetch(`${API_BASE}/upload`, {
     method: "POST",
-    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-    body: formData,
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      fileName: file.name,
+      fileType: file.type,
+      fileSize: file.size,
+      folder,
+      settingKey,
+    }),
   });
 
   const payload = (await response.json().catch(() => null)) as ApiEnvelope<{
     filename: string;
+    key: string;
     path: string;
     size: number;
     mimeType: string;
+    uploadUrl: string;
+    method: "PUT";
+    headers: Record<string, string>;
   }> | null;
 
   if (!response.ok || !payload || payload.code !== 0) {
     throw new Error(payload?.message || "Upload failed");
   }
 
-  return payload.data;
+  const directUploadResponse = await fetch(payload.data.uploadUrl, {
+    method: payload.data.method || "PUT",
+    headers: payload.data.headers || { "Content-Type": file.type || "application/octet-stream" },
+    body: file,
+  });
+
+  if (!directUploadResponse.ok) {
+    throw new Error(`Direct upload failed with status ${directUploadResponse.status}`);
+  }
+
+  return {
+    filename: payload.data.filename,
+    key: payload.data.key,
+    path: payload.data.path,
+    size: payload.data.size,
+    mimeType: payload.data.mimeType,
+  };
 }
 
 export async function addProductImageByUrl(productId: string, payload: { imageUrl: string; imageType: "main" | "detail"; altText?: string }) {

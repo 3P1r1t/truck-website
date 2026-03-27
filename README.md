@@ -60,7 +60,7 @@ npm run dev
 ## 默认管理员
 
 - Username: `admin`
-- Password: `admin123`
+- Password: `.env` 中的 `ADMIN_SEED_PASSWORD`
 
 首次登录后请立即修改密码。
 
@@ -75,3 +75,80 @@ npm run dev
 - Admin：`/api/admin/*`、`/api/inquiries/*`（管理动作需 Bearer Token）
 
 具体接口见：`docs/backend-api.md`
+
+## 部署到 Vercel + Supabase + Cloudflare R2
+
+### 1) Cloudflare R2 准备
+
+- 创建 Bucket（例如 `truck-assets`）
+- 为 Bucket 绑定可公开访问域名（推荐自定义域名），记为 `R2_PUBLIC_BASE_URL`
+- 创建 API Token（需包含该 Bucket 的 `Object Read/Write`）
+- 给 Bucket 配置 CORS（前端直传必须）
+
+示例 CORS：
+
+```json
+[
+  {
+    "AllowedOrigins": ["https://your-vercel-domain.vercel.app", "https://your-production-domain.com"],
+    "AllowedMethods": ["GET", "PUT", "HEAD"],
+    "AllowedHeaders": ["*"],
+    "ExposeHeaders": ["ETag"],
+    "MaxAgeSeconds": 3600
+  }
+]
+```
+
+### 2) Supabase 准备
+
+- 在 Supabase 创建 Postgres 项目
+- 获取 `DATABASE_URL` 和 `DIRECT_URL`（Prisma 使用）
+- 确认数据库网络策略允许 Vercel 访问
+
+### 3) Vercel 环境变量
+
+在 Vercel 项目 `Settings -> Environment Variables` 配置：
+
+- `DATABASE_URL`
+- `DIRECT_URL`
+- `JWT_SECRET`
+- `JWT_EXPIRES_IN`
+- `ADMIN_SEED_PASSWORD`
+- `NEXT_PUBLIC_API_URL`（通常填 `/api`）
+- `R2_ACCOUNT_ID`
+- `R2_ACCESS_KEY_ID`
+- `R2_SECRET_ACCESS_KEY`
+- `R2_BUCKET`
+- `R2_PUBLIC_BASE_URL`
+- `MAX_UPLOAD_SIZE`（可选，单位字节）
+
+### 4) Prisma 迁移与种子
+
+首次部署前执行：
+
+```bash
+npm install
+npm run db:generate
+npm run db:deploy
+npm run db:seed
+```
+
+生产环境后续发布只需：
+
+```bash
+npm run db:deploy
+```
+
+### 5) 上传链路说明（当前实现）
+
+- 管理端先请求后端 `/api/upload` 获取 R2 签名 URL
+- 浏览器直接 `PUT` 文件到 R2
+- 前端将返回的公共 URL 写入设置或产品图片记录
+- 删除产品图片时会同步尝试删除 R2 对象
+
+### 6) 上线后核验
+
+- 后台 `admin/settings` 上传首页主视觉图片/视频，确认可回显
+- 后台 `admin/products` 上传主图/详情图，确认前台可显示
+- 删除产品图片后，R2 对象应同步删除
+- 访问 `/api/admin/auth/change-password`，确认 Prisma 连接正常

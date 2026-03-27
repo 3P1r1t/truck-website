@@ -38,17 +38,25 @@ export async function DELETE(
       return fail("Image not found", 404);
     }
 
-    if (!image.isPrimary) {
-      const detailCount = await prisma.productImage.count({
-        where: { productId: product.id, isPrimary: false },
-      });
+    await prisma.$transaction(async (tx) => {
+      await tx.productImage.delete({ where: { id: image.id } });
 
-      if (detailCount <= 1) {
-        return fail("At least one detail image is required", 400);
+      if (image.isPrimary) {
+        const nextImage = await tx.productImage.findFirst({
+          where: { productId: product.id },
+          orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+          select: { id: true },
+        });
+
+        if (nextImage) {
+          await tx.productImage.update({
+            where: { id: nextImage.id },
+            data: { isPrimary: true },
+          });
+        }
       }
-    }
+    });
 
-    await prisma.productImage.delete({ where: { id: image.id } });
     await removeUploadedFile(image.imageUrl);
 
     await prisma.adminLog.create({
