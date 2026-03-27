@@ -79,8 +79,8 @@ export default function AboutPage() {
         <div className="industrial-panel overflow-hidden">
           <div className="grid grid-cols-1 gap-6 p-6 md:grid-cols-2 md:items-center md:p-8">
             <div>
-              <p className="industrial-kicker">{profileKicker}</p>
-              <h2 className="mt-2 text-4xl font-bold uppercase tracking-tight">{profileTitle}</h2>
+              <p className="industrial-kicker text-2xl">{profileKicker}</p>
+              <h2 className="mt-3 text-m leading-7 text-slate-600">{profileTitle}</h2>
             </div>
             {aboutImage ? (
               <div className="relative h-56 overflow-hidden rounded-sm border border-slate-200 bg-slate-200 md:h-72">
