@@ -1,6 +1,7 @@
-﻿"use client";
+"use client";
 
 import { useMemo, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -35,6 +36,7 @@ function isVideoAsset(url: string) {
 type SolutionBlock = {
   title: string;
   desc: string;
+  imageUrl?: string;
 };
 
 const SOLUTION_DEFAULTS: Record<Locale, SolutionBlock[]> = {
@@ -68,6 +70,12 @@ const SOLUTION_DEFAULTS: Record<Locale, SolutionBlock[]> = {
   ],
 };
 
+const SOLUTION_IMAGE_DEFAULTS = [
+  "/assets/pdf-extract/images/page-05-img-1.jpeg",
+  "/assets/pdf-extract/images/page-08-img-1.jpeg",
+  "/assets/pdf-extract/images/page-12-img-1.jpeg",
+];
+
 export default function HomePage() {
   const locale = useLocale();
   const { settings } = useSettings(locale);
@@ -98,8 +106,10 @@ export default function HomePage() {
   );
   const defaultHeroImage =
     "https://images.unsplash.com/photo-1592417817098-8fd3d7dbe115?auto=format&fit=crop&w=1920&q=80";
-  const heroMediaUrl = (settings.home_hero_image_url || "").trim() || "/Home-background.mp4";
+  const heroMediaPath = (settings.home_hero_image_url || "").trim();
+  const heroMediaUrl = heroMediaPath || "/Home-background.mp4";
   const heroIsVideo = isVideoAsset(heroMediaUrl);
+  const heroImageUrl = heroIsVideo ? defaultHeroImage : heroMediaUrl || defaultHeroImage;
 
   const capabilityTitle = getSettingValueByLocale(
     settings,
@@ -156,6 +166,11 @@ export default function HomePage() {
           locale,
           solutionDefaults[index - 1]?.desc || ""
         ),
+        imageUrl:
+          (settings[`home_solution_${index}_image_url`] || "").trim() ||
+          solutionDefaults[index - 1]?.imageUrl ||
+          SOLUTION_IMAGE_DEFAULTS[index - 1] ||
+          "",
       })),
     [settings, locale, solutionDefaults]
   );
@@ -168,20 +183,21 @@ export default function HomePage() {
       <section className="relative min-h-[82vh] overflow-hidden bg-slate-950 text-white">
         {heroIsVideo ? (
           <video
+            key={`hero-video-${heroMediaUrl}`}
             className="absolute inset-0 h-full w-full object-cover"
             autoPlay
             muted
             loop
             playsInline
             preload="metadata"
-            poster={defaultHeroImage}
           >
             <source src={heroMediaUrl} />
           </video>
         ) : (
           <div
+            key={`hero-image-${heroImageUrl}`}
             className="absolute inset-0 bg-cover bg-center"
-            style={{ backgroundImage: `url(${heroMediaUrl || defaultHeroImage})` }}
+            style={{ backgroundImage: `url(${heroImageUrl})` }}
           />
         )}
         <div
@@ -304,7 +320,20 @@ export default function HomePage() {
           <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
             {solutionBlocks.map((item) => (
               <article key={item.title} className="industrial-panel overflow-hidden">
-                <div className="h-40 bg-gradient-to-br from-slate-900 to-slate-700" />
+                <div className="relative aspect-[4/3] overflow-hidden bg-slate-900">
+                  {item.imageUrl ? (
+                    <Image
+                      src={item.imageUrl}
+                      alt={item.title}
+                      fill
+                      sizes="(min-width: 1280px) 360px, (min-width: 768px) 33vw, 100vw"
+                      className="object-cover transition duration-500 hover:scale-105"
+                    />
+                  ) : (
+                    <div className="h-full w-full bg-gradient-to-br from-slate-900 to-slate-700" />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-black/0 to-black/10" />
+                </div>
                 <div className="space-y-4 p-6">
                   <h3 className="text-2xl font-semibold uppercase tracking-tight">{item.title}</h3>
                   <p className="text-sm leading-7 text-slate-500">{item.desc}</p>

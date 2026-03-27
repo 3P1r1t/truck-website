@@ -230,8 +230,19 @@ async function upsertProducts(products: ProductSeed[], brandIds: Map<string, str
   }
 }
 
+function getAdminSeedPassword() {
+  const password = process.env.ADMIN_SEED_PASSWORD?.trim();
+  if (!password) {
+    throw new Error("ADMIN_SEED_PASSWORD is required for db seed");
+  }
+  if (password.length < 12) {
+    throw new Error("ADMIN_SEED_PASSWORD must be at least 12 characters");
+  }
+  return password;
+}
+
 async function main() {
-  const passwordHash = await bcrypt.hash("admin123", 10);
+  const passwordHash = await bcrypt.hash(getAdminSeedPassword(), 10);
 
   await prisma.admin.upsert({
     where: { username: "admin" },
@@ -890,6 +901,30 @@ async function main() {
       group: "home",
       label: "Capabilities Subtitle (ZH)",
       labelZh: "首页能力区副标题(中文)",
+    },
+    {
+      key: "home_solution_1_image_url",
+      value: "/assets/pdf-extract/images/page-05-img-1.jpeg",
+      type: "image",
+      group: "home",
+      label: "Solution 1 Image URL",
+      labelZh: "方案1图片",
+    },
+    {
+      key: "home_solution_2_image_url",
+      value: "/assets/pdf-extract/images/page-08-img-1.jpeg",
+      type: "image",
+      group: "home",
+      label: "Solution 2 Image URL",
+      labelZh: "方案2图片",
+    },
+    {
+      key: "home_solution_3_image_url",
+      value: "/assets/pdf-extract/images/page-12-img-1.jpeg",
+      type: "image",
+      group: "home",
+      label: "Solution 3 Image URL",
+      labelZh: "方案3图片",
     },
     {
       key: "about_intro_en",

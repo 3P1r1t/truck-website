@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { adminGetSettings, adminUpdateSettings, uploadAsset } from "@/lib/api";
@@ -203,6 +203,14 @@ const REQUIRED_SETTINGS: SettingItem[] = [
     labelZh: "方案1描述(中文)",
   },
   {
+    key: "home_solution_1_image_url",
+    value: "",
+    type: "image",
+    group: "home",
+    label: "Solution 1 Image URL",
+    labelZh: "方案1图片",
+  },
+  {
     key: "home_solution_2_title_en",
     value: "Cross-Border Logistics",
     type: "text",
@@ -235,6 +243,14 @@ const REQUIRED_SETTINGS: SettingItem[] = [
     labelZh: "方案2描述(中文)",
   },
   {
+    key: "home_solution_2_image_url",
+    value: "",
+    type: "image",
+    group: "home",
+    label: "Solution 2 Image URL",
+    labelZh: "方案2图片",
+  },
+  {
     key: "home_solution_3_title_en",
     value: "Heavy Construction",
     type: "text",
@@ -265,6 +281,14 @@ const REQUIRED_SETTINGS: SettingItem[] = [
     group: "home",
     label: "Solution 3 Description (ZH)",
     labelZh: "方案3描述(中文)",
+  },
+  {
+    key: "home_solution_3_image_url",
+    value: "",
+    type: "image",
+    group: "home",
+    label: "Solution 3 Image URL",
+    labelZh: "方案3图片",
   },
   {
     key: "header_top_notice_en",
@@ -438,13 +462,31 @@ const REQUIRED_SETTINGS: SettingItem[] = [
 ];
 
 function mergeRequired(items: SettingItem[]) {
-  const map = new Map(items.map((item) => [item.key, item]));
+  const requiredMap = new Map(REQUIRED_SETTINGS.map((item) => [item.key, item]));
+  const merged = items.map((item) => {
+    const required = requiredMap.get(item.key);
+    if (!required) {
+      return item;
+    }
+
+    return {
+      ...item,
+      type: required.type ?? item.type,
+      group: required.group ?? item.group,
+      label: required.label ?? item.label,
+      labelZh: required.labelZh ?? item.labelZh,
+      description: required.description ?? item.description,
+    };
+  });
+
+  const existingKeys = new Set(merged.map((item) => item.key));
   REQUIRED_SETTINGS.forEach((required) => {
-    if (!map.has(required.key)) {
-      map.set(required.key, required);
+    if (!existingKeys.has(required.key)) {
+      merged.push(required);
     }
   });
-  return Array.from(map.values()).sort((a, b) => {
+
+  return merged.sort((a, b) => {
     const ag = a.group || "zzzz";
     const bg = b.group || "zzzz";
     if (ag === bg) return a.key.localeCompare(b.key);
@@ -452,8 +494,13 @@ function mergeRequired(items: SettingItem[]) {
   });
 }
 
+function isVideoAsset(url: string) {
+  const normalized = (url || "").split("?")[0].split("#")[0].toLowerCase();
+  return /\.(mp4|webm|ogg|mov|m4v|avi)$/.test(normalized);
+}
+
 export default function AdminSettingsPage() {
-  const locale = useLocale();
+  const locale = useLocale("zh");
   const { pushMessage } = useAdminMessage();
   const [items, setItems] = useState<SettingItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -557,6 +604,8 @@ export default function AdminSettingsPage() {
                       const isHeroMedia = item.key === "home_hero_image_url";
                       const isMediaUploadField =
                         item.type === "image" || item.type === "media" || item.key.includes("image") || isHeroMedia;
+                      const mediaPath = (item.value || "").trim();
+                      const isVideoMedia = isVideoAsset(mediaPath);
                       return (
                         <div key={item.key} className="space-y-2 rounded border p-3">
                           <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
@@ -581,11 +630,14 @@ export default function AdminSettingsPage() {
                                   className="hidden"
                                   id={`upload-${item.key}`}
                                   onChange={async (event) => {
-                                    const file = event.target.files?.[0];
+                                    const inputEl = event.currentTarget as HTMLInputElement;
+                                    const file = inputEl.files?.[0];
+                                    // Clear immediately so re-selecting the same file always works.
+                                    inputEl.value = "";
                                     if (!file) return;
                                     setUploadingKey(item.key);
                                     try {
-                                      const uploaded = await uploadAsset(file, "settings");
+                                      const uploaded = await uploadAsset(file, "settings", item.key);
                                       updateItem(index, { value: uploaded.path });
                                       pushMessage(locale === "zh" ? "上传成功" : "Upload succeeded", "success");
                                     } catch (err: any) {
@@ -594,7 +646,6 @@ export default function AdminSettingsPage() {
                                       pushMessage(message, "error");
                                     } finally {
                                       setUploadingKey("");
-                                      event.currentTarget.value = "";
                                     }
                                   }}
                                 />
@@ -611,6 +662,19 @@ export default function AdminSettingsPage() {
                                 </label>
                                 {item.value ? <span className="text-xs text-muted-foreground">{item.value}</span> : null}
                               </div>
+                              {mediaPath ? (
+                                <div className="overflow-hidden rounded border bg-slate-50 p-2">
+                                  {isVideoMedia ? (
+                                    <video src={mediaPath} controls className="h-40 w-full rounded object-contain md:h-56" />
+                                  ) : (
+                                    <img
+                                      src={mediaPath}
+                                      alt={item.label || item.key}
+                                      className="h-40 w-full rounded object-contain md:h-56"
+                                    />
+                                  )}
+                                </div>
+                              ) : null}
                             </div>
                           ) : (
                             <textarea
@@ -633,8 +697,3 @@ export default function AdminSettingsPage() {
     </div>
   );
 }
-
-
-
-
-
