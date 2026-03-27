@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import useSWR, { mutate } from "swr";
 import type {
@@ -354,11 +354,14 @@ export async function uploadProductImage(productId: string, file: File, imageTyp
   return payload.data;
 }
 
-export async function uploadAsset(file: File, folder = "general") {
+export async function uploadAsset(file: File, folder = "general", settingKey?: string) {
   const token = getAdminToken();
   const formData = new FormData();
   formData.append("file", file);
   formData.append("folder", folder);
+  if (settingKey) {
+    formData.append("settingKey", settingKey);
+  }
 
   const response = await fetch(`${API_BASE}/upload`, {
     method: "POST",
@@ -611,6 +614,7 @@ export async function downloadInquiriesCsv(params?: {
   tag?: Inquiry["tag"];
   dateFrom?: string;
   dateTo?: string;
+  lang?: "en" | "zh";
 }) {
   const token = getAdminToken();
   const searchParams = new URLSearchParams();
@@ -619,6 +623,7 @@ export async function downloadInquiriesCsv(params?: {
   if (params?.tag) searchParams.set("tag", params.tag);
   if (params?.dateFrom) searchParams.set("dateFrom", params.dateFrom);
   if (params?.dateTo) searchParams.set("dateTo", params.dateTo);
+  if (params?.lang) searchParams.set("lang", params.lang);
 
   const response = await fetch(
     `${API_BASE}/inquiries/export${searchParams.toString() ? `?${searchParams.toString()}` : ""}`,
@@ -655,4 +660,3 @@ export async function adminUpdateSettings(items: SettingItem[]) {
   await mutate((key) => typeof key === "string" && key.startsWith("/admin/settings"));
   return data;
 }
-
