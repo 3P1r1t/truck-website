@@ -28,6 +28,7 @@ yarn-error.log*
 # Local env files
 .env
 .env*.local
+.env.Production
 
 # Vercel
 .vercel
@@ -50,4 +51,8 @@ public/uploads/*
 *.swp
 *.swo
 *~
+
+# Temporary local artifacts
+.tmp-*.json
+hotfix-*.patch
 
