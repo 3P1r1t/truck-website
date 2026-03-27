@@ -1,23 +1,26 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 import { Locale, localeFromClient } from "@/lib/i18n";
 
 export function useLocale(defaultLocale: Locale = "en"): Locale {
-  const [locale, setLocale] = useState<Locale>(defaultLocale);
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [locale, setLocale] = useState<Locale>(() => localeFromClient(undefined, defaultLocale));
 
   useEffect(() => {
-    // For admin pages we pass zh as default and keep zh when URL has no lang yet.
-    if (defaultLocale === "zh") {
-      const queryLang = new URL(window.location.href).searchParams.get("lang");
-      if (!queryLang) {
-        setLocale("zh");
-        return;
-      }
+    const queryLang = searchParams.get("lang");
+
+    // Keep zh as default for admin pages when lang is missing.
+    if (defaultLocale === "zh" && !queryLang) {
+      setLocale((prev) => (prev === "zh" ? prev : "zh"));
+      return;
     }
 
-    setLocale(localeFromClient(undefined, defaultLocale));
-  }, [defaultLocale]);
+    const nextLocale = localeFromClient(queryLang, defaultLocale);
+    setLocale((prev) => (prev === nextLocale ? prev : nextLocale));
+  }, [defaultLocale, pathname, searchParams]);
 
   return locale;
 }
