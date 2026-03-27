@@ -6,14 +6,8 @@ import { Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 import { useSettings } from "@/lib/api";
 import { useLocale } from "@/lib/use-locale";
 import { t } from "@/lib/site-dictionary";
-import { getSettingValueByLocale, Locale } from "@/lib/i18n";
+import { getSettingValueByLocale, withLangPath } from "@/lib/i18n";
 import { buildWhatsAppLink } from "@/lib/utils";
-
-function withLang(path: string, locale: Locale) {
-  const [pathname, hash] = path.split("#");
-  const base = `${pathname}${pathname.includes("?") ? "&" : "?"}lang=${locale}`;
-  return hash ? `${base}#${hash}` : base;
-}
 
 export function Footer() {
   const locale = useLocale();
@@ -62,16 +56,16 @@ export function Footer() {
             {locale === "zh" ? "导航" : "Navigation"}
           </h4>
           <div className="space-y-3 text-[11px] font-semibold uppercase tracking-[0.15em]">
-            <Link href={withLang("/products", locale)} className="block hover:text-primary">
+            <Link href={withLangPath("/products", locale)} className="block hover:text-primary">
               {t(locale, "nav_products")}
             </Link>
-            <Link href={withLang("/#solutions", locale)} className="block hover:text-primary">
+            <Link href={withLangPath("/#solutions", locale)} className="block hover:text-primary">
               {t(locale, "nav_solutions")}
             </Link>
-            <Link href={withLang("/about", locale)} className="block hover:text-primary">
+            <Link href={withLangPath("/about", locale)} className="block hover:text-primary">
               {t(locale, "nav_about")}
             </Link>
-            <Link href={withLang("/contact", locale)} className="block hover:text-primary">
+            <Link href={withLangPath("/contact", locale)} className="block hover:text-primary">
               {t(locale, "nav_contact")}
             </Link>
           </div>

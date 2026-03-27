@@ -9,14 +9,8 @@ import { Button } from "@/components/ui/button";
 import { useSettings } from "@/lib/api";
 import { useLocale } from "@/lib/use-locale";
 import { t } from "@/lib/site-dictionary";
-import { getSettingValueByLocale, Locale } from "@/lib/i18n";
+import { getSettingValueByLocale, Locale, withLangPath } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
-
-function withLang(path: string, locale: Locale) {
-  const [pathname, hash] = path.split("#");
-  const base = `${pathname}${pathname.includes("?") ? "&" : "?"}lang=${locale}`;
-  return hash ? `${base}#${hash}` : base;
-}
 
 export function Header() {
   const locale = useLocale();
@@ -69,7 +63,7 @@ export function Header() {
       </div>
 
       <div className="section-shell flex h-20 items-center justify-between">
-        <Link href={withLang("/", locale)} className="flex items-center gap-3">
+        <Link href={withLangPath("/", locale)} className="flex items-center gap-3">
           <span className="inline-flex rounded-sm border border-slate-200 bg-white px-2 py-1">
             <Image src="/tengyu.png" alt={siteName} width={164} height={48} className="h-9 w-auto md:h-10" priority />
           </span>
@@ -93,7 +87,7 @@ export function Header() {
             return (
               <Link
                 key={item.href}
-                href={withLang(item.href, locale)}
+                href={withLangPath(item.href, locale)}
                 className={cn("transition-colors", active ? "text-primary" : "text-slate-600 hover:text-primary")}
               >
                 {item.label}
@@ -118,7 +112,7 @@ export function Header() {
             </button>
           </div>
           <Button asChild className="rounded-sm bg-primary px-6 text-[11px] font-semibold uppercase tracking-[0.2em] hover:bg-primary/90">
-            <Link href={withLang("/contact", locale)}>{t(locale, "nav_quote")}</Link>
+            <Link href={withLangPath("/contact", locale)}>{t(locale, "nav_quote")}</Link>
           </Button>
         </div>
 
@@ -133,7 +127,7 @@ export function Header() {
             {navItems.map((item) => (
               <Link
                 key={item.href}
-                href={withLang(item.href, locale)}
+                href={withLangPath(item.href, locale)}
                 onClick={() => setMobileOpen(false)}
                 className="block border-b border-slate-100 pb-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-700"
               >
@@ -150,7 +144,7 @@ export function Header() {
                 </Button>
               </div>
               <Button size="sm" asChild>
-                <Link href={withLang("/contact", locale)} onClick={() => setMobileOpen(false)}>
+                <Link href={withLangPath("/contact", locale)} onClick={() => setMobileOpen(false)}>
                   {t(locale, "nav_quote")}
                 </Link>
               </Button>

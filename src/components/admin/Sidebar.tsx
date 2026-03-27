@@ -8,11 +8,7 @@ import { clearAdminToken } from "@/lib/api";
 import { useLocale } from "@/lib/use-locale";
 import { t } from "@/lib/site-dictionary";
 import { cn } from "@/lib/utils";
-import { Locale } from "@/lib/i18n";
-
-function withLang(path: string, locale: Locale) {
-  return `${path}${path.includes("?") ? "&" : "?"}lang=${locale}`;
-}
+import { withLangPath } from "@/lib/i18n";
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -44,7 +40,7 @@ export function Sidebar() {
           return (
             <Link
               key={item.href}
-              href={withLang(item.href, locale)}
+              href={withLangPath(item.href, locale)}
               className={cn(
                 "flex items-center justify-center gap-3 rounded-sm px-2 py-2.5 text-sm transition md:justify-start md:px-3",
                 active ? "bg-primary text-white" : "text-slate-300 hover:bg-white/10"
@@ -63,7 +59,7 @@ export function Sidebar() {
           className="flex w-full items-center justify-center gap-3 rounded-sm px-2 py-2.5 text-sm text-slate-300 transition hover:bg-white/10 md:justify-start md:px-3"
           onClick={() => {
             clearAdminToken();
-            router.push(withLang("/admin/login", locale));
+            router.push(withLangPath("/admin/login", locale));
           }}
           title={t(locale, "admin_logout")}
         >

@@ -11,13 +11,7 @@ import { ContactMethodCard } from "@/components/public/ContactMethodCard";
 import { useProducts, useSettings } from "@/lib/api";
 import { useLocale } from "@/lib/use-locale";
 import { t } from "@/lib/site-dictionary";
-import { getSettingValueByLocale, Locale } from "@/lib/i18n";
-
-function withLang(path: string, locale: Locale) {
-  const [pathname, hash] = path.split("#");
-  const base = `${pathname}${pathname.includes("?") ? "&" : "?"}lang=${locale}`;
-  return hash ? `${base}#${hash}` : base;
-}
+import { getSettingValueByLocale, Locale, withLangPath } from "@/lib/i18n";
 
 function safeColor(input: string | undefined, fallback: string) {
   const value = (input || "").trim();
@@ -218,7 +212,7 @@ export default function HomePage() {
             <p className="max-w-2xl text-lg text-slate-200 md:text-xl">{heroSubtitle}</p>
             <div className="flex flex-col gap-4 sm:flex-row">
               <Button asChild className="rounded-sm bg-white px-8 py-6 text-xs font-semibold uppercase tracking-[0.18em] text-slate-900 hover:bg-primary hover:text-white">
-                <Link href={withLang("/products", locale)}>
+                <Link href={withLangPath("/products", locale)}>
                   {t(locale, "hero_cta_primary")}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
@@ -251,7 +245,7 @@ export default function HomePage() {
               </h2>
             </div>
             <Button asChild variant="outline" className="rounded-sm border-slate-300 bg-white text-xs font-semibold uppercase tracking-[0.16em]">
-              <Link href={withLang("/products", locale)}>{t(locale, "hero_cta_primary")}</Link>
+              <Link href={withLangPath("/products", locale)}>{t(locale, "hero_cta_primary")}</Link>
             </Button>
           </div>
           {products.length > 0 ? (

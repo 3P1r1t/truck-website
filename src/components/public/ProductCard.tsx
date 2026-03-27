@@ -3,17 +3,13 @@ import Image from "next/image";
 import { ArrowUpRight } from "lucide-react";
 import { Product } from "@/lib/types";
 import { formatPriceRange } from "@/lib/utils";
-import { Locale } from "@/lib/i18n";
-
-function withLang(path: string, locale: Locale) {
-  return `${path}${path.includes("?") ? "&" : "?"}lang=${locale}`;
-}
+import { Locale, withLangPath } from "@/lib/i18n";
 
 export function ProductCard({ product, locale }: { product: Product; locale: Locale }) {
   const image = product.images.find((i) => i.isPrimary) || product.images[0];
 
   return (
-    <Link href={withLang(`/products/${product.slug}`, locale)} className="group block h-full">
+    <Link href={withLangPath(`/products/${product.slug}`, locale)} className="group block h-full">
       <article className="industrial-panel h-full overflow-hidden transition duration-500 group-hover:-translate-y-1 group-hover:shadow-[0_28px_40px_-26px_rgba(15,23,42,0.7)]">
         <div className="relative aspect-[4/3] bg-slate-200">
           {image ? (

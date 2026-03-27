@@ -78,7 +78,9 @@ export function getSettingValueByLocale(
 }
 
 export function withLangPath(pathname: string, locale: Locale) {
-  const hasQuery = pathname.includes("?");
-  return `${pathname}${hasQuery ? "&" : "?"}lang=${locale}`;
+  const [path, hash] = pathname.split("#");
+  const hasQuery = path.includes("?");
+  const withLang = `${path}${hasQuery ? "&" : "?"}lang=${locale}`;
+  return hash ? `${withLang}#${hash}` : withLang;
 }
 
