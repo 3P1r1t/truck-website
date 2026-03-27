@@ -6,15 +6,20 @@ import { useLocale } from "@/lib/use-locale";
 
 export default function AdminDashboardPage() {
   const locale = useLocale("zh");
-  const { products } = useProducts({ lang: locale, pageSize: 100 });
-  const { inquiries } = useInquiriesAdmin({ lang: locale, pageSize: 100 });
+  const { pagination: productPagination } = useProducts({ lang: locale, pageSize: 1 });
+  const { pagination: inquiryPagination } = useInquiriesAdmin({ lang: locale, pageSize: 1 });
+  const { pagination: highIntentPagination } = useInquiriesAdmin({
+    lang: locale,
+    pageSize: 1,
+    tag: "HIGH",
+  });
 
   const cards = [
-    { label: locale === "zh" ? "产品数" : "Products", value: products.length },
-    { label: locale === "zh" ? "线索数" : "Leads", value: inquiries.length },
+    { label: locale === "zh" ? "产品数" : "Products", value: productPagination?.total || 0 },
+    { label: locale === "zh" ? "线索数" : "Leads", value: inquiryPagination?.total || 0 },
     {
       label: locale === "zh" ? "高意向线索" : "High Intent Leads",
-      value: inquiries.filter((item) => item.tag === "HIGH").length,
+      value: highIntentPagination?.total || 0,
     },
   ];
 
