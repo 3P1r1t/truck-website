@@ -56,13 +56,20 @@ export function ContactMethodCard({
     message: "",
   });
 
+  const productNameMap = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const item of productOptions) {
+      map.set(item.id, item.name);
+    }
+    return map;
+  }, [productOptions]);
+
   const selectedProductName = useMemo(() => {
     if (defaultProductName) {
       return defaultProductName;
     }
-    const selected = productOptions.find((item) => item.id === form.productId);
-    return selected?.name || "";
-  }, [defaultProductName, form.productId, productOptions]);
+    return productNameMap.get(form.productId) || "";
+  }, [defaultProductName, form.productId, productNameMap]);
 
   const supportPhone = settings.support_phone || "+86-188-0000-0000";
   const whatsappNumber = settings.whatsapp_number || supportPhone;
@@ -73,14 +80,21 @@ export function ContactMethodCard({
     locale === "zh" ? "您好，我想咨询卡车方案。" : "Hello, I would like to discuss truck options."
   );
 
-  const whatsappText = [
-    defaultWhatsAppMessage,
-    selectedProductName ? `${locale === "zh" ? "意向车型" : "Interested model"}: ${selectedProductName}` : "",
-    contextNote || "",
-  ]
-    .filter(Boolean)
-    .join("\n");
-  const whatsappLink = buildWhatsAppLink(whatsappNumber, whatsappText);
+  const whatsappText = useMemo(
+    () =>
+      [
+        defaultWhatsAppMessage,
+        selectedProductName ? `${locale === "zh" ? "意向车型" : "Interested model"}: ${selectedProductName}` : "",
+        contextNote || "",
+      ]
+        .filter(Boolean)
+        .join("\n"),
+    [defaultWhatsAppMessage, selectedProductName, contextNote, locale]
+  );
+  const whatsappLink = useMemo(
+    () => buildWhatsAppLink(whatsappNumber, whatsappText),
+    [whatsappNumber, whatsappText]
+  );
 
   return (
     <div className={cn("space-y-4", className)}>
