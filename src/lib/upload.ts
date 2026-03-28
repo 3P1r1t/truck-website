@@ -8,6 +8,19 @@ import { EnvValidationError, getRequiredEnvMap } from "@/lib/env";
 
 const DEFAULT_MAX_UPLOAD_SIZE = 10 * 1024 * 1024;
 const PRESIGNED_URL_EXPIRES_IN_SECONDS = 300;
+const EXT_BY_MIME: Record<string, string> = {
+  "image/jpeg": ".jpg",
+  "image/png": ".png",
+  "image/webp": ".webp",
+  "image/gif": ".gif",
+  "video/mp4": ".mp4",
+  "video/webm": ".webm",
+  "video/ogg": ".ogg",
+  "video/quicktime": ".mov",
+  "video/x-msvideo": ".avi",
+};
+const IMAGE_MIME_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
+const MEDIA_MIME_TYPES = new Set([...IMAGE_MIME_TYPES, "video/mp4", "video/webm", "video/ogg", "video/quicktime", "video/x-msvideo"]);
 
 type R2Config = {
   accountId: string;
@@ -74,19 +87,7 @@ function sanitizeExtension(filename: string, mimeType: string) {
     return ext;
   }
 
-  const mimeFallback: Record<string, string> = {
-    "image/jpeg": ".jpg",
-    "image/png": ".png",
-    "image/webp": ".webp",
-    "image/gif": ".gif",
-    "video/mp4": ".mp4",
-    "video/webm": ".webm",
-    "video/ogg": ".ogg",
-    "video/quicktime": ".mov",
-    "video/x-msvideo": ".avi",
-  };
-
-  return mimeFallback[mimeType] || ".bin";
+  return EXT_BY_MIME[mimeType] || ".bin";
 }
 
 function readEnv(name: string) {
@@ -235,21 +236,11 @@ export function buildPublicFileUrl(key: string) {
 }
 
 export function isAllowedImageType(mimeType: string) {
-  return ["image/jpeg", "image/png", "image/webp", "image/gif"].includes(mimeType);
+  return IMAGE_MIME_TYPES.has((mimeType || "").toLowerCase());
 }
 
 export function isAllowedMediaType(mimeType: string) {
-  return [
-    "image/jpeg",
-    "image/png",
-    "image/webp",
-    "image/gif",
-    "video/mp4",
-    "video/webm",
-    "video/ogg",
-    "video/quicktime",
-    "video/x-msvideo",
-  ].includes(mimeType);
+  return MEDIA_MIME_TYPES.has((mimeType || "").toLowerCase());
 }
 
 export async function createPresignedUpload(
