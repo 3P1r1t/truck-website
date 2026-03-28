@@ -1,10 +1,10 @@
-﻿# 后端 API 文档（当前实现）
+# Backend API 文档（当前实现）
 
-项目：truck-merged-project  
-技术栈：Next.js 14 + Prisma + PostgreSQL  
-状态：Lead-only（文章与订单模块已下线）
+项目：`truck-merged-project`  
+框架：Next.js Route Handlers + Prisma  
+版本状态：Lead-only（文章/订单模块已下线）
 
-## 统一响应结构
+## 1. 统一响应格式
 
 成功：
 
@@ -33,65 +33,121 @@
 }
 ```
 
-## 认证
+## 2. 认证与权限
 
-- 管理端登录：`POST /api/admin/auth/login`
-- 管理端改密：`PATCH /api/admin/auth/change-password`
-- 管理接口使用：`Authorization: Bearer <token>`
-- 权限模型：`ADMIN` / `SUPER_ADMIN`
+- 登录：`POST /api/admin/auth/login`
+- Token：`Authorization: Bearer <token>`
+- 角色：`ADMIN` / `SUPER_ADMIN`
+- 权限规则：
+  - 普通管理：`requireAdmin`
+  - 超管操作（管理员创建/删改）：`requireSuperAdmin`
 
-## Public API
+## 3. Public API
+
+### 3.1 Products
 
 - `GET /api/products`
-- `GET /api/products/[id|slug]`
-- `GET /api/products/search?q=...`
+  - Query:
+    - `lang=en|zh`
+    - `page`, `pageSize`
+    - `search`
+    - `brandId`, `categoryId`, `fuelType`
+    - `featured=true`
+    - `includeInactive=true`（仅管理员 token 有效）
+- `POST /api/products`（Admin）
+- `GET /api/products/:idOrSlug`
+- `PUT /api/products/:idOrSlug`（Admin）
+- `DELETE /api/products/:idOrSlug`（Admin）
+- `GET /api/products/search`
+- `GET /api/products/fuel-types`
+
+图片管理（Admin）：
+- `POST /api/products/:idOrSlug/images/upload`
+- `POST /api/products/:idOrSlug/images/url`
+- `DELETE /api/products/:idOrSlug/images/:imageId`
+
+### 3.2 Brands
+
 - `GET /api/brands`
+  - Query: `lang`, `page`, `pageSize`, `includeInactive`
+- `POST /api/brands`（Admin）
+- `GET /api/brands/:idOrSlug`
+- `PUT /api/brands/:idOrSlug`（Admin）
+- `DELETE /api/brands/:idOrSlug`（Admin）
+
+### 3.3 Categories
+
 - `GET /api/categories`
+  - Query: `lang`, `page`, `pageSize`, `parentId`, `includeChildren`, `includeInactive`
+- `POST /api/categories`（Admin）
+- `GET /api/categories/:idOrSlug`
+- `PUT /api/categories/:idOrSlug`（Admin）
+- `DELETE /api/categories/:idOrSlug`（Admin）
+
+### 3.4 Fuel / Drive Types
+
 - `GET /api/fuel-types`
+- `POST /api/fuel-types`（Admin）
+- `PUT /api/fuel-types/:id`（Admin）
+- `DELETE /api/fuel-types/:id`（Admin）
+
 - `GET /api/drive-types`
+- `POST /api/drive-types`（Admin）
+- `PUT /api/drive-types/:id`（Admin）
+- `DELETE /api/drive-types/:id`（Admin）
+
+### 3.5 Settings
+
 - `GET /api/settings`
+  - Query: `group`
+
+### 3.6 Inquiries（Public Submit）
+
 - `POST /api/inquiries`
+  - 支持 `GENERAL` / `PRODUCT` 来源
+  - 若未传 `productId` 会回退到首个启用产品
 
-## Admin API
+## 4. Admin API
 
-### 产品
+### 4.1 Auth
 
-- `POST /api/products`
-- `PUT /api/products/[id|slug]`
-- `DELETE /api/products/[id|slug]`
-- `POST /api/products/[id|slug]/images/upload`
-- `POST /api/products/[id|slug]/images/url`
-- `DELETE /api/products/[id|slug]/images/[imageId]`
+- `POST /api/admin/auth/login`
+  - Body: `username`, `password`
+- `PATCH /api/admin/auth/change-password`
+  - Body: `currentPassword`, `newPassword`
 
-### 品牌 / 分类
+### 4.2 Admin Users（SUPER_ADMIN）
 
-- `POST /api/brands`
-- `PUT /api/brands/[id|slug]`
-- `DELETE /api/brands/[id|slug]`
-- `POST /api/categories`
-- `PUT /api/categories/[id|slug]`
-- `DELETE /api/categories/[id|slug]`
+- `GET /api/admin/users`
+- `POST /api/admin/users`
+- `PATCH /api/admin/users/:id/status`
+- `PATCH /api/admin/users/:id/password`
+- `DELETE /api/admin/users/:id`
 
-### 燃料 / 驱动类型
+### 4.3 Site Settings
 
-- `POST /api/fuel-types`
-- `PUT /api/fuel-types/[id]`
-- `DELETE /api/fuel-types/[id]`
-- `POST /api/drive-types`
-- `PUT /api/drive-types/[id]`
-- `DELETE /api/drive-types/[id]`
+- `GET /api/admin/settings`
+  - Query: `group`
+- `PUT /api/admin/settings`
+  - Body: `{ items: SettingItem[] }`
 
-### 线索（核心流程）
+### 4.4 Inquiry Workflow
 
-- `GET /api/inquiries`（管理员，支持分页+筛选）
-- `GET /api/inquiries/[id]`
-- `PATCH /api/inquiries/[id]/status`
-- `PATCH /api/inquiries/[id]/intent`
-- `DELETE /api/inquiries/[id]`
-- `GET /api/inquiries/export`（CSV 导出，管理员）
+- `GET /api/inquiries`（Admin）
+  - Query:
+    - `page`, `pageSize`
+    - `status` 或 `statuses`（逗号分隔）
+    - `tag`
+    - `dateFrom`, `dateTo`
+    - `productId`
+    - `lang`
+- `GET /api/inquiries/:id`（Admin）
+- `PATCH /api/inquiries/:id/status`（Admin）
+- `PATCH /api/inquiries/:id/intent`（Admin）
+- `DELETE /api/inquiries/:id`（Admin）
+- `GET /api/inquiries/export`（Admin，CSV）
 
-线索状态：
-
+状态枚举：
 - `PENDING`
 - `FOLLOWING`
 - `WAITING_REPLY`
@@ -99,27 +155,27 @@
 - `CONVERTED`
 - `ABANDONED`
 
-线索标签：
-
+意向标签：
 - `HIGH`
 - `MEDIUM`
 - `LOW`
 
-### 管理员与站点设置
+### 4.5 Upload
 
-- `GET /api/admin/users`
-- `POST /api/admin/users`（SUPER_ADMIN）
-- `PATCH /api/admin/users/[id]/status`（SUPER_ADMIN）
-- `PATCH /api/admin/users/[id]/password`（SUPER_ADMIN）
-- `DELETE /api/admin/users/[id]`（SUPER_ADMIN）
-- `GET /api/admin/settings`
-- `PUT /api/admin/settings`
+- `POST /api/upload`（Admin）
+  - 返回签名上传信息（R2）
+  - 前端随后直传 `uploadUrl`
 
-### 文件上传
+## 5. 错误码与常见场景
 
-- `POST /api/upload`
+- `400` 参数错误 / 非法状态流转
+- `401` 未登录或 token 无效
+- `403` 权限不足（例如非超管操作管理员）
+- `404` 资源不存在
+- `409` 唯一键冲突（slug/key 重复）或引用冲突
+- `500` 服务器错误
 
-## 说明
+## 6. 实现基准
 
-- 删除动作由前端管理端统一二次确认后发起。
-- 真实接口契约以 `src/app/api/**/route.ts` 为最终准。
+如文档与实现冲突，以 `src/app/api/**/route.ts` 为准。  
+建议联调时直接对照对应 route 文件与 `src/lib/validation.ts`。

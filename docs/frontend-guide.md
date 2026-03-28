@@ -1,9 +1,9 @@
-﻿# 前端开发指南（当前实现）
+# Frontend 开发指南（当前实现）
 
-项目：truck-merged-project  
+项目：`truck-merged-project`  
 框架：Next.js 14 App Router + TypeScript + Tailwind CSS
 
-## 路由结构
+## 1. 路由结构
 
 ```text
 src/app/
@@ -16,56 +16,74 @@ src/app/
 
   (admin)/
     layout.tsx
-    login/page.tsx              -> redirect /admin/login
-    dashboard/page.tsx          -> redirect /admin/dashboard
     admin/
-      login/page.tsx            // canonical login
+      login/page.tsx
       dashboard/page.tsx
       products/page.tsx
-      products/new/page.tsx     -> redirect /admin/products
-      inquiries/page.tsx        // 线索管理
-      pages/page.tsx            -> redirect /admin/settings
+      products/new/page.tsx
+      inquiries/page.tsx
       settings/page.tsx
       users/page.tsx
 
   api/
-    ...resource routes
+    ...route handlers
 ```
 
-## 管理端 URL 规范
+后台 URL 统一使用 `/admin/*`，不再保留 `/login`、`/dashboard` 的历史兼容路径。
 
-统一使用 `/admin/*`：
+## 2. 核心前端模块
 
-- `/admin/login`
-- `/admin/dashboard`
-- `/admin/products`
-- `/admin/inquiries`
-- `/admin/settings`
-- `/admin/users`
+- `src/lib/api.ts`
+  - SWR hooks 与 mutation 封装
+  - 管理端 token 读写
+- `src/lib/use-locale.ts`
+  - 前端语言解析（query/cookie）
+- `src/lib/i18n.ts`
+  - locale 工具与 `withLangPath`
+- `src/components/public/*`
+  - 公共站点组件（Header/Footer/ProductCard/Gallery/Contact）
+- `src/components/admin/*`
+  - 后台组件（Sidebar/Header/Form/Uploader/Dialog）
 
-历史路径 `/login`、`/dashboard` 仅保留重定向兼容。
+## 3. 数据流说明
 
-## 功能范围
+### 3.1 Public 页面
 
-- 公共站点：产品展示、关于我们、联系与线索提交
-- 管理后台：产品相关 CRUD、线索管理、站点配置、管理员管理
-- 线索能力：筛选、CSV 导出、新线索提示
-- 业务模式：Lead-only（无文章、无订单）
+- 页面通过 `useLocale()` 决定语言
+- 通过 `useProducts/useSettings` 拉取展示数据
+- 询盘通过 `submitInquiry` 发到 `/api/inquiries`
 
-## 国际化约定
+### 3.2 Admin 页面
 
-- 支持 `en` / `zh`
-- 页面通过 `?lang=en|zh` 控制语言
-- 站点设置字段使用后缀键，如：`home_hero_title_en` / `home_hero_title_zh`
+- `src/app/(admin)/layout.tsx` 负责 token 检查和登录跳转
+- 业务操作通过 `src/lib/api.ts` 的 Admin 方法调用
+- 列表刷新依赖 SWR `mutate`
 
-## 数据与接口
+## 4. 多语言规则
 
-- 前端请求封装：`src/lib/api.ts`
-- 类型定义：`src/lib/types.ts`
-- API 返回格式：`code/message/data/pagination`
-- 真实接口以 `src/app/api/**/route.ts` 为准
+- 语言：`en | zh`
+- URL：`?lang=en|zh`
+- 设置项：`key_en/key_zh` 命名（如 `home_hero_title_line1_en`）
+- 链接拼接统一用 `withLangPath`
 
-## 本地开发
+## 5. 上传与媒体
+
+- 上传流程：
+  1. 管理端请求 `/api/upload` 获取签名 URL
+  2. 浏览器直传到 R2
+  3. 将返回的 `path` 写入设置或产品图片
+- 保留资源目录：
+  - `public/assets/pdf-extract`
+  - `public/assets/默认图片`
+
+## 6. 状态与性能实践（已落地）
+
+- 管理端仪表盘改为分页总数统计，不再拉大列表计数
+- 线索页轮询仅在可见且在线时进行
+- 语言解析改为懒初始化，减少首屏额外渲染
+- 产品详情浏览量更新改为非阻塞写入
+
+## 7. 本地开发
 
 ```bash
 npm install
@@ -75,7 +93,8 @@ npm run db:seed
 npm run dev
 ```
 
-## 注意事项
+## 8. 调试建议
 
-- `.next` 或本地 node 进程占用时，`npm run build` 可能因 `EPERM` 失败。
-- 若执行 `npm run lint` 首次出现 Next ESLint 初始化向导，先完成初始化后再继续。
+- API 调试：直接看 `src/app/api/**/route.ts`
+- 前端请求调试：从 `src/lib/api.ts` 入口追踪
+- 多语言异常：先检查 URL `lang` 与 `site_lang` cookie
