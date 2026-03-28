@@ -19,8 +19,17 @@ const EXT_BY_MIME: Record<string, string> = {
   "video/quicktime": ".mov",
   "video/x-msvideo": ".avi",
 };
-const IMAGE_MIME_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
-const MEDIA_MIME_TYPES = new Set([...IMAGE_MIME_TYPES, "video/mp4", "video/webm", "video/ogg", "video/quicktime", "video/x-msvideo"]);
+const IMAGE_MIME_TYPE_LIST = ["image/jpeg", "image/png", "image/webp", "image/gif"] as const;
+const MEDIA_MIME_TYPE_LIST = [
+  ...IMAGE_MIME_TYPE_LIST,
+  "video/mp4",
+  "video/webm",
+  "video/ogg",
+  "video/quicktime",
+  "video/x-msvideo",
+] as const;
+const IMAGE_MIME_TYPES = new Set<string>(IMAGE_MIME_TYPE_LIST);
+const MEDIA_MIME_TYPES = new Set<string>(MEDIA_MIME_TYPE_LIST);
 
 type R2Config = {
   accountId: string;
